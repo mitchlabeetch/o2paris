@@ -2,7 +2,8 @@ import { neon } from '@neondatabase/serverless';
 
 // Get DATABASE_URL from environment
 // Use a valid but safe placeholder for build time
-const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/placeholder';
+const PLACEHOLDER_DB_URL = 'postgresql://user:password@localhost:5432/placeholder';
+const DATABASE_URL = process.env.DATABASE_URL || PLACEHOLDER_DB_URL;
 export const hasValidDatabaseUrl = Boolean(process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('placeholder'));
 export const sql = neon(DATABASE_URL);
 
