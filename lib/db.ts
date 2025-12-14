@@ -113,7 +113,8 @@ export async function initDatabase() {
         sound_url TEXT NOT NULL,
         icon VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT unique_pinpoint_location_title UNIQUE (latitude, longitude, title)
       )
     `;
 

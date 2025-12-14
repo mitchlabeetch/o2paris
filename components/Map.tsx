@@ -43,31 +43,65 @@ interface AudioPlayerProps {
 
 function AudioPlayer({ soundUrl }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    audioRef.current = new Audio(soundUrl);
+    // Reset state when soundUrl changes
+    setIsPlaying(false);
+    setIsLoading(false);
+    setError(null);
+
+    // Create and configure audio element
+    const audio = new Audio();
+    audio.preload = 'metadata';
+    audio.src = soundUrl;
+    audioRef.current = audio;
     
     const handleEnded = () => setIsPlaying(false);
-    audioRef.current.addEventListener('ended', handleEnded);
+    const handleError = () => {
+      setError('Impossible de charger le son');
+      setIsPlaying(false);
+      setIsLoading(false);
+    };
+    const handleCanPlay = () => {
+      setIsLoading(false);
+    };
+
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
+    audio.addEventListener('canplay', handleCanPlay);
     
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.removeEventListener('ended', handleEnded);
-      }
+      audio.pause();
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
+      audio.removeEventListener('canplay', handleCanPlay);
+      audioRef.current = null;
     };
   }, [soundUrl]);
 
-  const togglePlay = () => {
+  const togglePlay = async () => {
     if (!audioRef.current) return;
     
     if (isPlaying) {
       audioRef.current.pause();
+      setIsPlaying(false);
     } else {
-      audioRef.current.play();
+      try {
+        setIsLoading(true);
+        setError(null);
+        await audioRef.current.play();
+        setIsPlaying(true);
+        setIsLoading(false);
+      } catch (err) {
+        console.error('Error playing audio:', err);
+        setError('Erreur de lecture');
+        setIsPlaying(false);
+        setIsLoading(false);
+      }
     }
-    setIsPlaying(!isPlaying);
   };
 
   return (
@@ -76,9 +110,13 @@ function AudioPlayer({ soundUrl }: AudioPlayerProps) {
         onClick={togglePlay} 
         className="play-pause-btn"
         aria-label={isPlaying ? 'Pause' : 'Play'}
+        disabled={isLoading}
       >
-        {isPlaying ? '⏸' : '▶'}
+        {isLoading ? '⏳' : isPlaying ? '⏸' : '▶'}
       </button>
+      {error && (
+        <div className="text-xs text-red-600 mt-1">{error}</div>
+      )}
     </div>
   );
 }

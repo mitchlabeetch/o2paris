@@ -12,7 +12,8 @@ export async function GET() {
 
     await initDatabase();
     return NextResponse.json({ 
-      message: 'Database initialized successfully with sample data',
+      message: 'Database initialized successfully. Tables created and sample data seeded if empty.',
+      info: 'Note: This endpoint only seeds data if tables are empty to prevent duplicates.',
       seededPinpoints: SEED_PINPOINTS.length,
       success: true 
     });

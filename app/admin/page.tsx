@@ -237,7 +237,7 @@ export default function AdminPage() {
           
           {process.env.NODE_ENV !== 'production' && (
             <div className="mt-6 text-xs text-gray-500 text-center">
-              Développement - Mot de passe par défaut: admin123
+              Développement - Mot de passe par défaut: Admin123
             </div>
           )}
         </div>

@@ -67,9 +67,10 @@ Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 
 1. Connectez votre dépôt GitHub à Vercel
 2. Configurez les variables d'environnement dans les paramètres Vercel :
-   - `DATABASE_URL`
-   - `ADMIN_PASSWORD_HASH`
-   - `NEXTAUTH_SECRET`
+   - `DATABASE_URL` : Chaîne de connexion Neon PostgreSQL (requis)
+   - `ADMIN_PASSWORD_HASH` : Hash bcrypt du mot de passe admin (requis pour production)
+   
+   **Note importante pour Vercel** : Le nom de la variable d'environnement pour le mot de passe admin doit être exactement `ADMIN_PASSWORD_HASH`. Générez le hash avec `npm run generate-password VotreMotDePasse` et copiez le résultat dans les paramètres Vercel.
 3. Déployez !
 
 Vercel détectera automatiquement Next.js et utilisera la configuration appropriée.
@@ -83,7 +84,7 @@ Vercel détectera automatiquement Next.js et utilisera la configuration appropri
 
 ### Interface d'Administration
 1. Accédez à `/admin`
-2. Connectez-vous avec le mot de passe admin (par défaut: `admin123`)
+2. Connectez-vous avec le mot de passe admin (par défaut en développement: `Admin123`)
 3. Gérez les points, sons et configuration de la carte
 
 #### Gérer les Points

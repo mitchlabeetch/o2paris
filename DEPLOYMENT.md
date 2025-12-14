@@ -31,8 +31,12 @@ Notez le hash généré, vous en aurez besoin pour Vercel.
 2. Cliquez sur "Add New Project"
 3. Importez votre dépôt GitHub `lightmyfireadmin/o2paris`
 4. Configurez les variables d'environnement :
-   - `DATABASE_URL` : Votre chaîne de connexion Neon
-   - `ADMIN_PASSWORD_HASH` : Le hash bcrypt généré à l'étape 2
+   - **Variable name**: `DATABASE_URL`  
+     **Value**: Votre chaîne de connexion Neon PostgreSQL
+   - **Variable name**: `ADMIN_PASSWORD_HASH`  
+     **Value**: Le hash bcrypt généré à l'étape 2
+   
+   ⚠️ **Important**: Les noms des variables doivent être exactement `DATABASE_URL` et `ADMIN_PASSWORD_HASH` (sensibles à la casse).
 
 5. Cliquez sur "Deploy"
 
