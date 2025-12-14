@@ -30,6 +30,13 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
+    if (!hasValidDatabaseUrl) {
+      return NextResponse.json(
+        { error: 'DATABASE_URL manquante. Initialisez la base avec /api/init.' },
+        { status: 503 }
+      );
+    }
+
     const body = await request.json();
     const { tile_layer_url, center_lat, center_lng, zoom_level, max_zoom, min_zoom, attribution } = body;
 

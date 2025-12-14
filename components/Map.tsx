@@ -23,7 +23,10 @@ const escapeHtml = (value: string) =>
 
 // Custom water-themed marker icon
 const createWaterIcon = (icon?: string) => {
-  const symbol = escapeHtml(icon?.trim() || '💧');
+  const raw = (icon || '💧').trim();
+  // Allow only short, safe symbols to avoid injection
+  const safe = /^[\p{L}\p{N}\p{P}\p{S}]{1,4}$/u.test(raw) ? raw : '💧';
+  const symbol = escapeHtml(safe);
   return L.divIcon({
     className: 'custom-marker',
     html: `<div style="background: radial-gradient(circle, #E3F2FD 0%, #2196F3 100%); border: 3px solid #1565C0; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">${symbol}</div>`,
