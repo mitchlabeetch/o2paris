@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
+import { hasValidDatabaseUrl, sql } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
+    if (!hasValidDatabaseUrl) {
+      return NextResponse.json(
+        { error: 'DATABASE_URL manquante. Initialisez la base avec /api/init.' },
+        { status: 503 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -43,6 +50,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    if (!hasValidDatabaseUrl) {
+      return NextResponse.json(
+        { error: 'DATABASE_URL manquante. Initialisez la base avec /api/init.' },
+        { status: 503 }
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
@@ -82,6 +96,13 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    if (!hasValidDatabaseUrl) {
+      return NextResponse.json(
+        { error: 'DATABASE_URL manquante. Initialisez la base avec /api/init.' },
+        { status: 503 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 

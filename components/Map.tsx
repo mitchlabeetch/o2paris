@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import type { Pinpoint, MapConfig } from '@/lib/db';
 
@@ -13,11 +13,20 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
+const escapeHtml = (value: string) =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
 // Custom water-themed marker icon
-const createWaterIcon = () => {
+const createWaterIcon = (icon?: string) => {
+  const symbol = escapeHtml(icon?.trim() || '💧');
   return L.divIcon({
     className: 'custom-marker',
-    html: '<div style="background: radial-gradient(circle, #E3F2FD 0%, #2196F3 100%); border: 3px solid #1565C0; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">💧</div>',
+    html: `<div style="background: radial-gradient(circle, #E3F2FD 0%, #2196F3 100%); border: 3px solid #1565C0; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">${symbol}</div>`,
     iconSize: [30, 30],
     iconAnchor: [15, 15],
     popupAnchor: [0, -15],
@@ -106,7 +115,7 @@ export default function Map({ pinpoints, config }: MapProps) {
         <Marker
           key={pinpoint.id}
           position={[pinpoint.latitude, pinpoint.longitude]}
-          icon={createWaterIcon()}
+          icon={createWaterIcon(pinpoint.icon)}
         >
           <Popup>
             <div className="p-2">

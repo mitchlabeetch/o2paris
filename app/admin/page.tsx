@@ -1,19 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { Pinpoint, MapConfig } from '@/lib/db';
+import type { Pinpoint, MapConfig, Sound } from '@/lib/db';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [status, setStatus] = useState('');
   
   const [pinpoints, setPinpoints] = useState<Pinpoint[]>([]);
+  const [sounds, setSounds] = useState<Sound[]>([]);
   const [config, setConfig] = useState<Partial<MapConfig>>({});
   const [activeTab, setActiveTab] = useState<'pinpoints' | 'sounds' | 'config'>('pinpoints');
   
   const [editingPinpoint, setEditingPinpoint] = useState<Partial<Pinpoint> | null>(null);
+  const [initializingDb, setInitializingDb] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -30,18 +33,29 @@ export default function AdminPage() {
 
   const loadData = async () => {
     try {
-      const [pinpointsRes, configRes] = await Promise.all([
+      setStatus('');
+      const [pinpointsRes, configRes, soundsRes] = await Promise.all([
         fetch('/api/pinpoints'),
         fetch('/api/config'),
+        fetch('/api/sounds'),
       ]);
-      
-      const pinpointsData = await pinpointsRes.json();
-      const configData = await configRes.json();
-      
+
+      if (!pinpointsRes.ok || !configRes.ok || !soundsRes.ok) {
+        throw new Error('Failed to load data');
+      }
+
+      const [pinpointsData, configData, soundsData] = await Promise.all([
+        pinpointsRes.json(),
+        configRes.json(),
+        soundsRes.json(),
+      ]);
+
       setPinpoints(pinpointsData);
       setConfig(configData);
+      setSounds(soundsData);
     } catch (err) {
       console.error('Error loading data:', err);
+      setStatus('Impossible de charger les données. Vérifiez la base de données puis réessayez.');
     }
   };
 
@@ -90,9 +104,14 @@ export default function AdminPage() {
       if (response.ok) {
         await loadData();
         setEditingPinpoint(null);
+        setStatus('Point sauvegardé.');
+      } else {
+        const data = await response.json();
+        setStatus(data?.error || 'Impossible de sauvegarder le point.');
       }
     } catch (err) {
       console.error('Error saving pinpoint:', err);
+      setStatus('Erreur lors de la sauvegarde du point.');
     }
   };
 
@@ -102,8 +121,10 @@ export default function AdminPage() {
     try {
       await fetch(`/api/pinpoints?id=${id}`, { method: 'DELETE' });
       await loadData();
+      setStatus('Point supprimé.');
     } catch (err) {
       console.error('Error deleting pinpoint:', err);
+      setStatus('Erreur lors de la suppression du point.');
     }
   };
 
@@ -122,10 +143,12 @@ export default function AdminPage() {
 
       if (response.ok) {
         const data = await response.json();
-        alert(`Fichier téléchargé ! URL: /api/sounds?id=${data.id}`);
+        await loadData();
+        setStatus(`Fichier téléchargé ! URL: /api/sounds?id=${data.id}`);
       }
     } catch (err) {
       console.error('Error uploading sound:', err);
+      setStatus('Erreur lors du téléversement du son.');
     }
   };
 
@@ -136,10 +159,42 @@ export default function AdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config),
       });
-      alert('Configuration sauvegardée !');
+      setStatus('Configuration sauvegardée !');
       await loadData();
     } catch (err) {
       console.error('Error saving config:', err);
+      setStatus('Erreur lors de la sauvegarde de la configuration.');
+    }
+  };
+
+  const handleInitDatabase = async () => {
+    try {
+      setInitializingDb(true);
+      setStatus('');
+      const response = await fetch('/api/init');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || 'Initialisation échouée');
+      }
+
+      setStatus(data?.message || 'Base initialisée avec les données de démonstration.');
+      await loadData();
+    } catch (err) {
+      console.error('Error initializing database:', err);
+      setStatus('Impossible d’initialiser la base. Vérifiez DATABASE_URL et réessayez.');
+    } finally {
+      setInitializingDb(false);
+    }
+  };
+
+  const copySoundUrl = async (id: number) => {
+    try {
+      await navigator.clipboard.writeText(`/api/sounds?id=${id}`);
+      setStatus('URL copiée dans le presse-papier.');
+    } catch (err) {
+      console.error('Error copying sound url:', err);
+      setStatus('Impossible de copier l’URL du son.');
     }
   };
 
@@ -195,6 +250,13 @@ export default function AdminPage() {
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-water-dark">Administration O2Paris</h1>
           <div className="flex gap-4">
+            <button
+              onClick={handleInitDatabase}
+              disabled={initializingDb}
+              className="water-button"
+            >
+              {initializingDb ? 'Initialisation...' : 'Initialiser + seed'}
+            </button>
             <a href="/" className="text-water-dark hover:text-water-deep">
               Voir la carte
             </a>
@@ -206,6 +268,11 @@ export default function AdminPage() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {status && (
+          <div className="mb-4 bg-blue-50 border border-water-main text-water-dark px-4 py-3 rounded-lg">
+            {status}
+          </div>
+        )}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="flex border-b border-gray-200">
             <button
@@ -252,6 +319,7 @@ export default function AdminPage() {
                       title: '',
                       description: '',
                       sound_url: '',
+                      icon: '💧',
                     })}
                     className="water-button"
                   >
@@ -323,6 +391,22 @@ export default function AdminPage() {
                       className="water-input w-full"
                     />
                     
+                    <div className="space-y-1">
+                      <input
+                        type="text"
+                        placeholder="Icône personnalisée (emoji ou caractère)"
+                        value={editingPinpoint.icon || ''}
+                        onChange={(e) => setEditingPinpoint({
+                          ...editingPinpoint,
+                          icon: e.target.value,
+                        })}
+                        className="water-input w-full"
+                      />
+                      <p className="text-xs text-gray-500">
+                        Exemple : 💧 🌊 🎵 — laisser vide pour utiliser l’icône par défaut.
+                      </p>
+                    </div>
+                    
                     <div className="flex gap-2">
                       <button onClick={handleSavePinpoint} className="water-button">
                         Sauvegarder
@@ -341,10 +425,12 @@ export default function AdminPage() {
                   {pinpoints.map((pinpoint) => (
                     <div
                       key={pinpoint.id}
-                      className="bg-gray-50 p-4 rounded-lg flex justify-between items-start"
-                    >
-                      <div>
-                        <h4 className="font-bold text-gray-800">{pinpoint.title}</h4>
+                     className="bg-gray-50 p-4 rounded-lg flex justify-between items-start"
+                   >
+                     <div>
+                        <h4 className="font-bold text-gray-800">
+                          {pinpoint.icon ? `${pinpoint.icon} ` : ''}{pinpoint.title}
+                        </h4>
                         <p className="text-sm text-gray-600">{pinpoint.description}</p>
                         <p className="text-xs text-gray-500 mt-1">
                           {pinpoint.latitude}, {pinpoint.longitude}
@@ -399,9 +485,40 @@ export default function AdminPage() {
                   <p className="font-semibold mb-2">Instructions:</p>
                   <ol className="list-decimal list-inside space-y-1">
                     <li>Téléchargez un fichier audio ci-dessus</li>
-                    <li>Notez l&apos;ID retourné dans l&apos;alerte</li>
+                    <li>Copiez l&apos;URL grâce au bouton associé ou notez l&apos;ID</li>
                     <li>Utilisez /api/sounds?id=ID dans le champ &quot;URL du son&quot; d&apos;un point</li>
                   </ol>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-gray-800">Sons disponibles</h3>
+                    <span className="text-xs text-gray-500">{sounds.length} fichier(s)</span>
+                  </div>
+                  {sounds.length === 0 ? (
+                    <p className="text-sm text-gray-600">
+                      Aucun son pour le moment. Téléversez-en un pour le rendre disponible dans vos points.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {sounds.map((sound) => (
+                        <div
+                          key={sound.id}
+                          className="flex items-center justify-between bg-gray-50 p-3 rounded-lg"
+                        >
+                          <div>
+                            <p className="font-medium text-gray-800">{sound.filename}</p>
+                            <p className="text-xs text-gray-500">
+                              ID: {sound.id} • {(sound.size / 1024).toFixed(1)} Ko
+                            </p>
+                          </div>
+                          <button onClick={() => copySoundUrl(sound.id)} className="water-button">
+                            Copier l&apos;URL
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}

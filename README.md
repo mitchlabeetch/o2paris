@@ -53,7 +53,8 @@ cp .env.example .env
 - `NEXTAUTH_SECRET` : Secret généré avec `openssl rand -base64 32`
 
 4. Initialisez la base de données :
-Accédez à `/api/init` après le premier démarrage pour créer les tables
+   - Option CLI : `psql "$DATABASE_URL" -f scripts/migrations/001_init.sql`
+   - Option HTTP : accédez à `/api/init` après le premier démarrage pour créer les tables **et** insérer des données de démonstration
 
 5. Lancez le serveur de développement :
 ```bash
