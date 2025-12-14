@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import type { Pinpoint, MapConfig } from '@/lib/db';
+import { FALLBACK_SOUND_URL } from '@/lib/fallbackAudio';
 
 // Fix for default marker icons in react-leaflet
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
@@ -36,7 +37,6 @@ const createWaterIcon = (icon?: string) => {
     popupAnchor: [0, -15],
   });
 };
-
 interface AudioPlayerProps {
   soundUrl: string;
 }
@@ -46,24 +46,85 @@ function AudioPlayer({ soundUrl }: AudioPlayerProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const fallbackAppliedRef = useRef(false);
+  const LOAD_ERROR_MESSAGE = 'Impossible de charger le son';
+
+  const handlePlaybackFailure = (message: string) => {
+    setError(message);
+    setIsPlaying(false);
+    setIsLoading(false);
+  };
+
+  const playFallbackAudio = useCallback(async () => {
+    if (!audioRef.current) {
+      return false;
+    }
+
+    try {
+      await audioRef.current.play();
+      setIsPlaying(true);
+      setIsLoading(false);
+      setError(null);
+      return true;
+    } catch (fallbackErr) {
+      console.error('Error playing fallback audio:', fallbackErr);
+      return false;
+    }
+  }, []);
+
+  const applyFallback = useCallback(async (shouldPlay: boolean) => {
+    if (!audioRef.current) {
+      return false;
+    }
+
+    if (fallbackAppliedRef.current) {
+      return shouldPlay ? playFallbackAudio() : true;
+    }
+
+    if (!fallbackAppliedRef.current) {
+      fallbackAppliedRef.current = true;
+      audioRef.current.src = FALLBACK_SOUND_URL;
+    }
+
+    if (shouldPlay) {
+      return playFallbackAudio();
+    }
+
+    try {
+      audioRef.current.load();
+      return true;
+    } catch (loadErr) {
+      console.error('Error loading fallback audio:', loadErr);
+      return false;
+    }
+  }, [playFallbackAudio]);
 
   useEffect(() => {
     // Reset state when soundUrl changes
     setIsPlaying(false);
     setIsLoading(false);
     setError(null);
+    fallbackAppliedRef.current = false;
 
     // Create and configure audio element
     const audio = new Audio();
     audio.preload = 'metadata';
-    audio.src = soundUrl;
+    audio.src = soundUrl || '';
     audioRef.current = audio;
     
     const handleEnded = () => setIsPlaying(false);
-    const handleError = () => {
-      setError('Impossible de charger le son');
+    const handleError = async () => {
       setIsPlaying(false);
       setIsLoading(false);
+      try {
+        const recovered = await applyFallback(false);
+        if (!recovered) {
+          handlePlaybackFailure(LOAD_ERROR_MESSAGE);
+        }
+      } catch (fallbackErr) {
+        console.error('Error preparing fallback audio:', fallbackErr);
+        handlePlaybackFailure(LOAD_ERROR_MESSAGE);
+      }
     };
     const handleCanPlay = () => {
       setIsLoading(false);
@@ -80,7 +141,7 @@ function AudioPlayer({ soundUrl }: AudioPlayerProps) {
       audio.removeEventListener('canplay', handleCanPlay);
       audioRef.current = null;
     };
-  }, [soundUrl]);
+  }, [applyFallback, soundUrl]);
 
   const togglePlay = async () => {
     if (!audioRef.current) return;
@@ -97,9 +158,10 @@ function AudioPlayer({ soundUrl }: AudioPlayerProps) {
         setIsLoading(false);
       } catch (err) {
         console.error('Error playing audio:', err);
-        setError('Erreur de lecture');
-        setIsPlaying(false);
-        setIsLoading(false);
+        const recovered = await applyFallback(true);
+        if (!recovered) {
+          handlePlaybackFailure('Erreur de lecture');
+        }
       }
     }
   };

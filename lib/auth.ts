@@ -1,9 +1,12 @@
 import bcrypt from 'bcryptjs';
 
+const PLACEHOLDER_ADMIN_HASH = 'your_bcrypt_hashed_password';
+
 export async function verifyPassword(password: string): Promise<boolean> {
-  const hashedPassword = process.env.ADMIN_PASSWORD_HASH;
+  const hashedPassword = process.env.ADMIN_PASSWORD_HASH?.trim();
+  const isPlaceholder = !hashedPassword || hashedPassword === PLACEHOLDER_ADMIN_HASH;
   
-  if (!hashedPassword) {
+  if (isPlaceholder) {
     // For development only - allow 'Admin123' as default password
     // Using a pre-generated hash to ensure consistency
     if (process.env.NODE_ENV !== 'production') {
