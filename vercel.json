@@ -1,0 +1,9 @@
+{
+  "buildCommand": "npm run build",
+  "framework": "nextjs",
+  "env": {
+    "DATABASE_URL": "@database_url",
+    "ADMIN_PASSWORD_HASH": "@admin_password_hash",
+    "NEXTAUTH_SECRET": "@nextauth_secret"
+  }
+}

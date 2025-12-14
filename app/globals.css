@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --water-light: #E3F2FD;
+  --water-main: #2196F3;
+  --water-dark: #1565C0;
+  --water-deep: #0D47A1;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Leaflet CSS - required for map functionality */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  z-index: 0;
+}
+
+.leaflet-popup-content-wrapper {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+}
+
+.leaflet-popup-tip {
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+/* Water theme styling */
+.water-button {
+  background: linear-gradient(135deg, var(--water-main) 0%, var(--water-dark) 100%);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.water-button:hover {
+  background: linear-gradient(135deg, var(--water-dark) 0%, var(--water-deep) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(33, 150, 243, 0.4);
+}
+
+.water-button:active {
+  transform: translateY(0);
+}
+
+.water-input {
+  border: 2px solid var(--water-main);
+  border-radius: 8px;
+  padding: 8px 12px;
+  transition: all 0.3s ease;
+}
+
+.water-input:focus {
+  outline: none;
+  border-color: var(--water-dark);
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2);
+}
+
+/* Audio player styling */
+.audio-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.play-pause-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--water-main) 0%, var(--water-dark) 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.play-pause-btn:hover {
+  background: linear-gradient(135deg, var(--water-dark) 0%, var(--water-deep) 100%);
+  transform: scale(1.1);
+}
+
+/* Custom marker styling */
+.custom-marker {
+  background: radial-gradient(circle, var(--water-light) 0%, var(--water-main) 100%);
+  border: 3px solid var(--water-dark);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.custom-marker:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 20px rgba(33, 150, 243, 0.6);
+}
