@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
+import { hasValidDatabaseUrl, sql } from '@/lib/db';
 
 export async function GET() {
   try {
+    if (!hasValidDatabaseUrl) {
+      return NextResponse.json(
+        { error: 'DATABASE_URL manquante. Initialisez la base avec /api/init.' },
+        { status: 503 }
+      );
+    }
+
     const pinpoints = await sql`SELECT * FROM pinpoints ORDER BY id`;
     return NextResponse.json(pinpoints);
   } catch (error) {
@@ -18,6 +25,13 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { latitude, longitude, title, description, sound_url, icon } = body;
+
+    if (!hasValidDatabaseUrl) {
+      return NextResponse.json(
+        { error: 'DATABASE_URL manquante. Initialisez la base avec /api/init.' },
+        { status: 503 }
+      );
+    }
 
     if (!latitude || !longitude || !title || !sound_url) {
       return NextResponse.json(
@@ -46,6 +60,13 @@ export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
     const { id, latitude, longitude, title, description, sound_url, icon } = body;
+
+    if (!hasValidDatabaseUrl) {
+      return NextResponse.json(
+        { error: 'DATABASE_URL manquante. Initialisez la base avec /api/init.' },
+        { status: 503 }
+      );
+    }
 
     if (!id) {
       return NextResponse.json(
@@ -89,6 +110,13 @@ export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
+
+    if (!hasValidDatabaseUrl) {
+      return NextResponse.json(
+        { error: 'DATABASE_URL manquante. Initialisez la base avec /api/init.' },
+        { status: 503 }
+      );
+    }
 
     if (!id) {
       return NextResponse.json(

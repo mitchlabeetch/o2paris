@@ -1,20 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
+import { DEFAULT_MAP_CONFIG, hasValidDatabaseUrl, sql } from '@/lib/db';
 
 export async function GET() {
   try {
+    if (!hasValidDatabaseUrl) {
+      return NextResponse.json({
+        ...DEFAULT_MAP_CONFIG,
+      });
+    }
+
     const configs = await sql`SELECT * FROM map_config ORDER BY id DESC LIMIT 1`;
     
     if (configs.length === 0) {
       // Return default config
       return NextResponse.json({
-        tile_layer_url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        center_lat: 48.8566,
-        center_lng: 2.3522,
-        zoom_level: 13,
-        max_zoom: 18,
-        min_zoom: 10,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        ...DEFAULT_MAP_CONFIG,
       });
     }
 
@@ -30,6 +30,13 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
+    if (!hasValidDatabaseUrl) {
+      return NextResponse.json(
+        { error: 'DATABASE_URL manquante. Initialisez la base avec /api/init.' },
+        { status: 503 }
+      );
+    }
+
     const body = await request.json();
     const { tile_layer_url, center_lat, center_lng, zoom_level, max_zoom, min_zoom, attribution } = body;
 

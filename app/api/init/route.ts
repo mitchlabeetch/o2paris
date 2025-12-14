@@ -1,11 +1,19 @@
 import { NextResponse } from 'next/server';
-import { initDatabase } from '@/lib/db';
+import { SEED_PINPOINTS, hasValidDatabaseUrl, initDatabase } from '@/lib/db';
 
 export async function GET() {
   try {
+    if (!hasValidDatabaseUrl) {
+      return NextResponse.json(
+        { error: 'DATABASE_URL manquante. Renseignez-la avant d’initialiser la base.' },
+        { status: 503 }
+      );
+    }
+
     await initDatabase();
     return NextResponse.json({ 
-      message: 'Database initialized successfully',
+      message: 'Database initialized successfully with sample data',
+      seededPinpoints: SEED_PINPOINTS.length,
       success: true 
     });
   } catch (error) {

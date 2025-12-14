@@ -1,9 +1,13 @@
-import dynamic from 'next/dynamic';
-import { sql } from '@/lib/db';
+import dynamicImport from 'next/dynamic';
+import { FALLBACK_MAP_CONFIG, FALLBACK_PINPOINTS, hasValidDatabaseUrl, sql } from '@/lib/db';
 import type { Pinpoint, MapConfig } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const runtime = 'nodejs';
+
 // Dynamically import Map component with no SSR to avoid Leaflet issues
-const Map = dynamic(() => import('@/components/Map'), {
+const Map = dynamicImport(() => import('@/components/Map'), {
   ssr: false,
   loading: () => (
     <div className="w-full h-screen flex items-center justify-center bg-water-light">
@@ -14,48 +18,36 @@ const Map = dynamic(() => import('@/components/Map'), {
 
 async function getPinpoints(): Promise<Pinpoint[]> {
   try {
+    if (!hasValidDatabaseUrl) {
+      return FALLBACK_PINPOINTS;
+    }
+
     const pinpoints = await sql`SELECT * FROM pinpoints ORDER BY id`;
     return pinpoints as Pinpoint[];
   } catch (error) {
     console.error('Error fetching pinpoints:', error);
-    return [];
+    return FALLBACK_PINPOINTS;
   }
 }
 
 async function getMapConfig(): Promise<MapConfig> {
   try {
+    if (!hasValidDatabaseUrl) {
+      return FALLBACK_MAP_CONFIG;
+    }
+
     const configs = await sql`SELECT * FROM map_config ORDER BY id DESC LIMIT 1`;
     
     if (configs.length === 0) {
       // Return default config for Paris
-      return {
-        id: 1,
-        tile_layer_url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        center_lat: 48.8566,
-        center_lng: 2.3522,
-        zoom_level: 13,
-        max_zoom: 18,
-        min_zoom: 10,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        updated_at: new Date(),
-      };
+      return FALLBACK_MAP_CONFIG;
     }
 
     return configs[0] as MapConfig;
   } catch (error) {
     console.error('Error fetching config:', error);
     // Return default config
-    return {
-      id: 1,
-      tile_layer_url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      center_lat: 48.8566,
-      center_lng: 2.3522,
-      zoom_level: 13,
-      max_zoom: 18,
-      min_zoom: 10,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      updated_at: new Date(),
-    };
+    return FALLBACK_MAP_CONFIG;
   }
 }
 
