@@ -25,7 +25,8 @@ const escapeHtml = (value: string) =>
 const createWaterIcon = (icon?: string) => {
   const raw = (icon || '💧').trim();
   // Allow only short, safe symbols (letters, numbers, emoji). Default otherwise.
-  const safe = /^[\p{L}\p{N}\p{Emoji_Presentation}\p{Emoji}]{1,4}$/u.test(raw) ? raw : '💧';
+  const emojiSafePattern = /^(?:[A-Za-z0-9]|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDE4F]|\uD83E[\uDD00-\uDDFF]){1,4}$/;
+  const safe = emojiSafePattern.test(raw) ? raw : '💧';
   const symbol = escapeHtml(safe);
   return L.divIcon({
     className: 'custom-marker',
