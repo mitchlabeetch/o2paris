@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import type { Pinpoint, MapConfig } from '@/lib/db';
@@ -109,7 +109,9 @@ function AudioPlayer({ soundUrl }: AudioPlayerProps) {
     // Create and configure audio element
     const audio = new Audio();
     audio.preload = 'metadata';
-    audio.src = soundUrl || '';
+    audio.crossOrigin = 'anonymous';
+    const sanitizedSource = (soundUrl || '').trim();
+    audio.src = sanitizedSource || FALLBACK_SOUND_URL;
     audioRef.current = audio;
     
     const handleEnded = () => setIsPlaying(false);
@@ -190,6 +192,17 @@ interface MapProps {
 
 export default function Map({ pinpoints, config }: MapProps) {
   const [mounted, setMounted] = useState(false);
+  const uniquePinpoints = useMemo(() => {
+    const seen = new Set<string>();
+    return pinpoints.filter((pinpoint) => {
+      const key = `${pinpoint.title}-${pinpoint.latitude}-${pinpoint.longitude}`;
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+  }, [pinpoints]);
 
   useEffect(() => {
     setMounted(true);
@@ -215,7 +228,7 @@ export default function Map({ pinpoints, config }: MapProps) {
         attribution={config.attribution}
         url={config.tile_layer_url}
       />
-      {pinpoints.map((pinpoint) => (
+      {uniquePinpoints.map((pinpoint) => (
         <Marker
           key={pinpoint.id}
           position={[pinpoint.latitude, pinpoint.longitude]}

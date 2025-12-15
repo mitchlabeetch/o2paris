@@ -10,7 +10,7 @@ export async function verifyPassword(password: string): Promise<boolean> {
     // For development only - allow 'Admin123' as default password
     // Using a pre-generated hash to ensure consistency
     if (process.env.NODE_ENV !== 'production') {
-      const defaultHash = '$2a$10$9ZfwyQCLtC0TFNHksZwpyuPPX7KIMhEUGhSg/rEhEAUwcCeTSmuBq';
+      const defaultHash = '$2a$10$m2JUQ2M68OnAnqHFQanwGOj/j57bhdy/5YphNdQxuZ0aioeJlIAA6';
       return bcrypt.compare(password, defaultHash);
     }
     throw new Error('ADMIN_PASSWORD_HASH must be set in production');

@@ -30,12 +30,15 @@ export async function GET(request: NextRequest) {
     }
 
     const sound = result[0];
+    const binaryData = typeof sound.data === 'string'
+      ? Buffer.from(sound.data.replace(/^\\x/, ''), 'hex')
+      : Buffer.from(sound.data);
     
     // Return the audio file with reasonable caching (1 day)
-    return new NextResponse(sound.data, {
+    return new NextResponse(binaryData, {
       headers: {
         'Content-Type': sound.mime_type,
-        'Content-Length': sound.size.toString(),
+        'Content-Length': binaryData.byteLength.toString(),
         'Cache-Control': 'public, max-age=86400, immutable',
       },
     });
