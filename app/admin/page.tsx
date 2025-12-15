@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Pinpoint, MapConfig, Sound } from '@/lib/db';
 import { getCookie } from '@/lib/client-utils';
 import Toast from '@/components/Toast';
@@ -23,20 +23,6 @@ export default function AdminPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [deleteType, setDeleteType] = useState<'pinpoint' | 'sound' | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const token = getCookie('admin_token');
-      const hasToken = !!token;
-      setIsAuthenticated(hasToken);
-      
-      if (hasToken) {
-        loadData();
-      }
-    };
-    
-    checkAuth();
-  }, [loadData]);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToast({ message, type });
@@ -69,6 +55,20 @@ export default function AdminPage() {
       showToast(`Impossible de charger les données. (${message})`, 'error');
     }
   }, []);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = getCookie('admin_token');
+      const hasToken = !!token;
+      setIsAuthenticated(hasToken);
+      
+      if (hasToken) {
+        loadData();
+      }
+    };
+    
+    checkAuth();
+  }, [loadData]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
