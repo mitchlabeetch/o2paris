@@ -15,7 +15,7 @@ export default function Toast({ message, type = 'info', onClose }: ToastProps) {
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [onClose]);
+  }, [message, type]); // Only depend on message/type, not onClose
 
   const bgColors = {
     success: 'bg-green-100 border-green-500 text-green-800',

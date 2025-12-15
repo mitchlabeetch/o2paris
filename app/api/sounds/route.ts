@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { hasValidDatabaseUrl, sql } from '@/lib/db';
 
+// Maximum file size for sound uploads (in bytes)
+const MAX_FILE_SIZE_BYTES = 4.5 * 1024 * 1024; // 4.5MB
+
 export async function GET(request: NextRequest) {
   try {
     if (!hasValidDatabaseUrl) {
@@ -67,8 +70,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file size (max 4.5MB)
-    if (file.size > 4.5 * 1024 * 1024) {
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE_BYTES) {
         return NextResponse.json(
             { error: 'File too large (max 4.5MB)' },
             { status: 400 }

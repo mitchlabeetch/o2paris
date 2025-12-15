@@ -48,8 +48,8 @@ export default function Modal({
           </button>
           {onConfirm && (
             <button
-              onClick={() => {
-                onConfirm();
+              onClick={async () => {
+                await onConfirm();
                 onClose();
               }}
               className={`px-4 py-2 text-white rounded-lg transition-colors font-medium text-sm shadow-sm ${
