@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!latitude || !longitude || !title || !sound_url) {
+    if (latitude === undefined || longitude === undefined || !title || !sound_url) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
