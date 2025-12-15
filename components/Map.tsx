@@ -1,10 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useState, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from 'react-leaflet';
 import L from 'leaflet';
 import type { Pinpoint, MapConfig } from '@/lib/db';
 import { FALLBACK_SOUND_URL } from '@/lib/fallbackAudio';
+import Loading from './Loading';
 
 // Fix for default marker icons in react-leaflet
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
@@ -31,12 +32,37 @@ const createWaterIcon = (icon?: string) => {
   const symbol = escapeHtml(safe);
   return L.divIcon({
     className: 'custom-marker',
-    html: `<div style="background: radial-gradient(circle, #E3F2FD 0%, #2196F3 100%); border: 3px solid #1565C0; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">${symbol}</div>`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-    popupAnchor: [0, -15],
+    html: `<div class="marker-content">${symbol}</div>`,
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+    popupAnchor: [0, -20],
   });
 };
+
+function LocateControl() {
+  const map = useMap();
+
+  const handleLocate = () => {
+    map.locate().on("locationfound", function (e) {
+      map.flyTo(e.latlng, map.getZoom());
+    });
+  };
+
+  return (
+    <div className="leaflet-bottom leaflet-left">
+      <div className="leaflet-control leaflet-bar">
+        <button
+          onClick={handleLocate}
+          className="bg-white hover:bg-gray-100 text-water-dark w-[30px] h-[30px] flex items-center justify-center font-bold text-lg"
+          title="Me localiser"
+          style={{ width: '30px', height: '30px', lineHeight: '30px', cursor: 'pointer', border: 'none', background: 'white' }}
+        >
+          📍
+        </button>
+      </div>
+    </div>
+  );
+}
 interface AudioPlayerProps {
   soundUrl: string;
 }
@@ -196,40 +222,45 @@ export default function Map({ pinpoints, config }: MapProps) {
   }, []);
 
   if (!mounted) {
-    return (
-      <div className="w-full h-screen flex items-center justify-center bg-water-light">
-        <div className="text-water-dark text-xl">Chargement de la carte...</div>
-      </div>
-    );
+    return <Loading />;
   }
 
   return (
     <MapContainer
       center={[config.center_lat, config.center_lng]}
       zoom={config.zoom_level}
-      style={{ height: '100vh', width: '100%' }}
+      style={{ height: '100dvh', width: '100%' }}
       maxZoom={config.max_zoom}
       minZoom={config.min_zoom}
+      zoomControl={false}
     >
       <TileLayer
         attribution={config.attribution}
         url={config.tile_layer_url}
       />
+      <ZoomControl position="bottomright" />
+      <LocateControl />
+
       {pinpoints.map((pinpoint) => (
         <Marker
           key={pinpoint.id}
           position={[pinpoint.latitude, pinpoint.longitude]}
           icon={createWaterIcon(pinpoint.icon)}
         >
-          <Popup>
-            <div className="p-2">
-              <h3 className="font-bold text-water-dark text-lg mb-2">
-                {pinpoint.title}
-              </h3>
-              <p className="text-gray-700 mb-3">
+          <Popup className="custom-popup">
+            <div className="p-1 min-w-[200px]">
+              <div className="flex items-center gap-2 mb-2 border-b border-gray-100 pb-2">
+                <span className="text-2xl">{pinpoint.icon || '💧'}</span>
+                <h3 className="font-bold text-water-dark text-lg leading-tight">
+                  {pinpoint.title}
+                </h3>
+              </div>
+              <p className="text-gray-600 text-sm mb-4 leading-relaxed">
                 {pinpoint.description}
               </p>
-              <AudioPlayer soundUrl={pinpoint.sound_url} />
+              <div className="bg-gray-50 p-2 rounded-lg">
+                <AudioPlayer soundUrl={pinpoint.sound_url} />
+              </div>
             </div>
           </Popup>
         </Marker>

@@ -67,6 +67,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate file size (max 4.5MB)
+    if (file.size > 4.5 * 1024 * 1024) {
+        return NextResponse.json(
+            { error: 'File too large (max 4.5MB)' },
+            { status: 400 }
+        );
+    }
+
     // Validate file type (audio only)
     if (!file.type.startsWith('audio/')) {
       return NextResponse.json(

@@ -1,14 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Pinpoint, MapConfig, Sound } from '@/lib/db';
+import { getCookie } from '@/lib/client-utils';
+import Toast from '@/components/Toast';
+import Modal from '@/components/Modal';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [status, setStatus] = useState('');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   
   const [pinpoints, setPinpoints] = useState<Pinpoint[]>([]);
   const [sounds, setSounds] = useState<Sound[]>([]);
@@ -17,10 +20,14 @@ export default function AdminPage() {
   
   const [editingPinpoint, setEditingPinpoint] = useState<Partial<Pinpoint> | null>(null);
   const [initializingDb, setInitializingDb] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleteType, setDeleteType] = useState<'pinpoint' | 'sound' | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
-      const hasToken = document.cookie.includes('admin_token');
+      const token = getCookie('admin_token');
+      const hasToken = !!token;
       setIsAuthenticated(hasToken);
       
       if (hasToken) {
@@ -29,11 +36,14 @@ export default function AdminPage() {
     };
     
     checkAuth();
-  }, []);
+  }, [loadData]);
 
-  const loadData = async () => {
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ message, type });
+  };
+
+  const loadData = useCallback(async () => {
     try {
-      setStatus('');
       const [pinpointsRes, configRes, soundsRes] = await Promise.all([
         fetch('/api/pinpoints'),
         fetch('/api/config'),
@@ -56,9 +66,9 @@ export default function AdminPage() {
     } catch (err) {
       console.error('Error loading data:', err);
       const message = err instanceof Error ? err.message : 'erreur inconnue';
-      setStatus(`Impossible de charger les données. Vérifiez la base de données puis réessayez. (${message})`);
+      showToast(`Impossible de charger les données. (${message})`, 'error');
     }
-  };
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,33 +115,52 @@ export default function AdminPage() {
       if (response.ok) {
         await loadData();
         setEditingPinpoint(null);
-        setStatus('Point sauvegardé.');
+        showToast('Point sauvegardé.', 'success');
       } else {
         const data = await response.json();
-        setStatus(data?.error || 'Impossible de sauvegarder le point.');
+        showToast(data?.error || 'Impossible de sauvegarder le point.', 'error');
       }
     } catch (err) {
       console.error('Error saving pinpoint:', err);
-      setStatus('Erreur lors de la sauvegarde du point.');
+      showToast('Erreur lors de la sauvegarde du point.', 'error');
     }
   };
 
-  const handleDeletePinpoint = async (id: number) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce point ?')) return;
+  const confirmDelete = (id: number, type: 'pinpoint' | 'sound') => {
+    setDeleteId(id);
+    setDeleteType(type);
+  };
+
+  const executeDelete = async () => {
+    if (!deleteId || !deleteType) return;
 
     try {
-      await fetch(`/api/pinpoints?id=${id}`, { method: 'DELETE' });
+      if (deleteType === 'pinpoint') {
+        await fetch(`/api/pinpoints?id=${deleteId}`, { method: 'DELETE' });
+        showToast('Point supprimé.', 'success');
+      } else {
+        await fetch(`/api/sounds?id=${deleteId}`, { method: 'DELETE' });
+        showToast('Son supprimé.', 'success');
+      }
       await loadData();
-      setStatus('Point supprimé.');
     } catch (err) {
-      console.error('Error deleting pinpoint:', err);
-      setStatus('Erreur lors de la suppression du point.');
+      console.error(`Error deleting ${deleteType}:`, err);
+      showToast(`Erreur lors de la suppression du ${deleteType === 'pinpoint' ? 'point' : 'son'}.`, 'error');
+    } finally {
+      setDeleteId(null);
+      setDeleteType(null);
     }
   };
 
   const handleUploadSound = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (file.size > 4.5 * 1024 * 1024) {
+      showToast('Erreur : Le fichier dépasse 4.5MB.', 'error');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
 
     const formData = new FormData();
     formData.append('file', file);
@@ -145,11 +174,16 @@ export default function AdminPage() {
       if (response.ok) {
         const data = await response.json();
         await loadData();
-        setStatus(`Fichier téléchargé ! URL: /api/sounds?id=${data.id}`);
+        showToast('Fichier téléchargé !', 'success');
+      } else {
+        const errorData = await response.json();
+        showToast(`Erreur : ${errorData.error}`, 'error');
       }
     } catch (err) {
       console.error('Error uploading sound:', err);
-      setStatus('Erreur lors du téléversement du son.');
+      showToast('Erreur lors du téléversement du son.', 'error');
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -160,18 +194,17 @@ export default function AdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config),
       });
-      setStatus('Configuration sauvegardée !');
+      showToast('Configuration sauvegardée !', 'success');
       await loadData();
     } catch (err) {
       console.error('Error saving config:', err);
-      setStatus('Erreur lors de la sauvegarde de la configuration.');
+      showToast('Erreur lors de la sauvegarde de la configuration.', 'error');
     }
   };
 
   const handleInitDatabase = async () => {
     try {
       setInitializingDb(true);
-      setStatus('');
       const response = await fetch('/api/init');
       const data = await response.json();
 
@@ -179,23 +212,27 @@ export default function AdminPage() {
         throw new Error(data?.error || 'Initialisation échouée');
       }
 
-      setStatus(data?.message || 'Base initialisée avec les données de démonstration.');
+      showToast(data?.message || 'Base initialisée avec succès.', 'success');
       await loadData();
     } catch (err) {
       console.error('Error initializing database:', err);
-      setStatus('Impossible d’initialiser la base. Vérifiez DATABASE_URL et réessayez.');
+      showToast('Impossible d’initialiser la base. Vérifiez DATABASE_URL.', 'error');
     } finally {
       setInitializingDb(false);
     }
   };
 
-  const copySoundUrl = async (id: number) => {
+  const copySoundUrl = async (id: number, e: React.MouseEvent) => {
     try {
       await navigator.clipboard.writeText(`/api/sounds?id=${id}`);
-      setStatus('URL copiée dans le presse-papier.');
+      const btn = e.currentTarget as HTMLButtonElement;
+      const originalText = btn.innerText;
+      btn.innerText = 'Copié !';
+      setTimeout(() => btn.innerText = originalText, 2000);
+      showToast('URL copiée dans le presse-papier.', 'success');
     } catch (err) {
       console.error('Error copying sound url:', err);
-      setStatus('Impossible de copier l’URL du son.');
+      showToast('Impossible de copier l’URL du son.', 'error');
     }
   };
 
@@ -247,21 +284,43 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-water-dark">Administration O2Paris</h1>
-          <div className="flex gap-4">
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      <Modal
+        isOpen={!!deleteId}
+        title={`Supprimer ce ${deleteType === 'pinpoint' ? 'point' : 'son'} ?`}
+        onClose={() => { setDeleteId(null); setDeleteType(null); }}
+        onConfirm={executeDelete}
+        confirmText="Supprimer"
+        isDestructive
+      >
+        <p>Cette action est irréversible. Êtes-vous sûr de vouloir continuer ?</p>
+      </Modal>
+
+      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-water-dark">Admin O2Paris</h1>
+            <button onClick={handleLogout} className="text-red-600 hover:text-red-700 md:hidden">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+              </svg>
+            </button>
+          </div>
+          <div className="flex gap-2 flex-wrap items-center">
             <button
               onClick={handleInitDatabase}
               disabled={initializingDb}
-              className="water-button"
+              className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg transition-colors"
             >
-              {initializingDb ? 'Initialisation...' : 'Initialiser + seed'}
+              {initializingDb ? '...' : 'Reset DB'}
             </button>
-            <a href="/" className="text-water-dark hover:text-water-deep">
-              Voir la carte
+            <a href="/" className="text-sm bg-water-light text-water-dark hover:bg-water-main hover:text-white px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+              </svg>
+              Voir carte
             </a>
-            <button onClick={handleLogout} className="text-red-600 hover:text-red-700">
+            <button onClick={handleLogout} className="hidden md:block text-red-600 hover:text-red-700 px-3 py-1.5">
               Déconnexion
             </button>
           </div>
@@ -269,42 +328,40 @@ export default function AdminPage() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {status && (
-          <div className="mb-4 bg-blue-50 border border-water-main text-water-dark px-4 py-3 rounded-lg">
-            {status}
-          </div>
-        )}
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="flex border-b border-gray-200">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+          <div className="flex border-b border-gray-200 overflow-x-auto">
             <button
               onClick={() => setActiveTab('pinpoints')}
-              className={`px-6 py-3 font-medium ${
+              className={`flex-1 min-w-[120px] px-4 py-4 font-medium text-sm transition-colors relative ${
                 activeTab === 'pinpoints'
-                  ? 'text-water-dark border-b-2 border-water-dark'
-                  : 'text-gray-500'
+                  ? 'text-water-dark'
+                  : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              Points sur la carte
+              Points
+              {activeTab === 'pinpoints' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-water-dark" />}
             </button>
             <button
               onClick={() => setActiveTab('sounds')}
-              className={`px-6 py-3 font-medium ${
+              className={`flex-1 min-w-[120px] px-4 py-4 font-medium text-sm transition-colors relative ${
                 activeTab === 'sounds'
-                  ? 'text-water-dark border-b-2 border-water-dark'
-                  : 'text-gray-500'
+                  ? 'text-water-dark'
+                  : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               Sons
+              {activeTab === 'sounds' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-water-dark" />}
             </button>
             <button
               onClick={() => setActiveTab('config')}
-              className={`px-6 py-3 font-medium ${
+              className={`flex-1 min-w-[120px] px-4 py-4 font-medium text-sm transition-colors relative ${
                 activeTab === 'config'
-                  ? 'text-water-dark border-b-2 border-water-dark'
-                  : 'text-gray-500'
+                  ? 'text-water-dark'
+                  : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               Configuration
+              {activeTab === 'config' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-water-dark" />}
             </button>
           </div>
 
@@ -422,37 +479,62 @@ export default function AdminPage() {
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  {pinpoints.map((pinpoint) => (
-                    <div
-                      key={pinpoint.id}
-                     className="bg-gray-50 p-4 rounded-lg flex justify-between items-start"
-                   >
-                     <div>
-                        <h4 className="font-bold text-gray-800">
-                          {pinpoint.icon ? `${pinpoint.icon} ` : ''}{pinpoint.title}
-                        </h4>
-                        <p className="text-sm text-gray-600">{pinpoint.description}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {pinpoint.latitude}, {pinpoint.longitude}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setEditingPinpoint(pinpoint)}
-                          className="text-water-dark hover:text-water-deep"
-                        >
-                          Modifier
-                        </button>
-                        <button
-                          onClick={() => handleDeletePinpoint(pinpoint.id)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          Supprimer
-                        </button>
-                      </div>
+                <div className="space-y-3">
+                  {pinpoints.length === 0 ? (
+                    <div className="text-center py-10 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                      <div className="text-4xl mb-2">🗺️</div>
+                      <p className="text-gray-500">Aucun point sur la carte.</p>
+                      <button
+                        onClick={() => setEditingPinpoint({
+                          latitude: 48.8566,
+                          longitude: 2.3522,
+                          title: '',
+                          description: '',
+                          sound_url: '',
+                          icon: '💧',
+                        })}
+                        className="mt-4 text-water-dark font-medium hover:underline"
+                      >
+                        Créer le premier point
+                      </button>
                     </div>
-                  ))}
+                  ) : (
+                    pinpoints.map((pinpoint) => (
+                      <div
+                        key={pinpoint.id}
+                        className="group bg-white border border-gray-200 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all hover:shadow-md hover:border-water-light"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-full bg-water-light flex items-center justify-center text-xl flex-shrink-0">
+                            {pinpoint.icon || '💧'}
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-gray-800">
+                              {pinpoint.title}
+                            </h4>
+                            <p className="text-sm text-gray-600 line-clamp-1">{pinpoint.description}</p>
+                            <p className="text-xs text-gray-400 mt-1 font-mono">
+                              {pinpoint.latitude.toFixed(4)}, {pinpoint.longitude.toFixed(4)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                          <button
+                            onClick={() => setEditingPinpoint(pinpoint)}
+                            className="flex-1 sm:flex-none px-3 py-1.5 text-sm font-medium text-water-dark bg-water-light/30 rounded-lg hover:bg-water-light transition-colors"
+                          >
+                            Modifier
+                          </button>
+                          <button
+                            onClick={() => confirmDelete(pinpoint.id, 'pinpoint')}
+                            className="flex-1 sm:flex-none px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                          >
+                            Supprimer
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}
@@ -466,6 +548,7 @@ export default function AdminPage() {
                     Télécharger un nouveau son
                   </label>
                   <input
+                    ref={fileInputRef}
                     type="file"
                     accept="audio/*"
                     onChange={handleUploadSound}
@@ -478,7 +561,7 @@ export default function AdminPage() {
                       cursor-pointer"
                   />
                   <p className="text-xs text-gray-500 mt-2">
-                    Formats acceptés: MP3, WAV, OGG, etc.
+                    Formats acceptés: MP3, WAV, OGG, etc. Max 4.5MB.
                   </p>
                 </div>
 
@@ -497,25 +580,48 @@ export default function AdminPage() {
                     <span className="text-xs text-gray-500">{sounds.length} fichier(s)</span>
                   </div>
                   {sounds.length === 0 ? (
-                    <p className="text-sm text-gray-600">
-                      Aucun son pour le moment. Téléversez-en un pour le rendre disponible dans vos points.
-                    </p>
+                    <div className="text-center py-10 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                      <div className="text-4xl mb-2">🎵</div>
+                      <p className="text-gray-500">La sonothèque est vide.</p>
+                      <p className="text-sm text-gray-400 mt-1">Téléversez un fichier audio pour commencer.</p>
+                    </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="grid grid-cols-1 gap-3">
                       {sounds.map((sound) => (
                         <div
                           key={sound.id}
-                          className="flex items-center justify-between bg-gray-50 p-3 rounded-lg"
+                          className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white border border-gray-200 p-4 rounded-xl hover:shadow-sm transition-all gap-4"
                         >
-                          <div>
-                            <p className="font-medium text-gray-800">{sound.filename}</p>
-                            <p className="text-xs text-gray-500">
-                              ID: {sound.id} • {(sound.size / 1024).toFixed(1)} Ko
-                            </p>
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500">
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                                <path fillRule="evenodd" d="M19.952 1.651a.75.75 0 01.298.599V16.303a3 3 0 01-2.176 2.884l-1.32.377a2.553 2.553 0 11-1.403-4.909l2.311-.66a1.5 1.5 0 001.088-1.442V6.994l-9 2.572v9.737a3 3 0 01-2.176 2.884l-1.32.377a2.553 2.553 0 11-1.402-4.909l2.31-.66a1.5 1.5 0 001.088-1.442V9.017c0-.568.085-1.122.245-1.646.218-.714.757-1.3 1.455-1.562l10.04-2.868a.75.75 0 01.912.693z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-800 break-all">{sound.filename}</p>
+                              <p className="text-xs text-gray-400 font-mono mt-0.5">
+                                ID: <span className="bg-gray-100 px-1 rounded text-gray-600">{sound.id}</span> • {(sound.size / 1024).toFixed(1)} Ko
+                              </p>
+                            </div>
                           </div>
-                          <button onClick={() => copySoundUrl(sound.id)} className="water-button">
-                            Copier l&apos;URL
-                          </button>
+                          <div className="flex gap-2 w-full sm:w-auto">
+                            <button
+                              onClick={(e) => copySoundUrl(sound.id, e)}
+                              className="flex-1 sm:flex-none px-3 py-1.5 text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors flex items-center justify-center gap-1"
+                            >
+                              Copier URL
+                            </button>
+                            <button
+                                onClick={() => confirmDelete(sound.id, 'sound')}
+                                className="px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Supprimer le son"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                </svg>
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>

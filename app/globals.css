@@ -99,19 +99,37 @@ body {
 
 /* Custom marker styling */
 .custom-marker {
+  background: transparent;
+  border: none;
+}
+
+.marker-content {
   background: radial-gradient(circle, var(--water-light) 0%, var(--water-main) 100%);
   border: 3px solid var(--water-dark);
   border-radius: 50%;
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  font-size: 20px;
 }
 
-.custom-marker:hover {
-  transform: scale(1.2);
-  box-shadow: 0 0 20px rgba(33, 150, 243, 0.6);
+.custom-marker:hover .marker-content {
+  transform: scale(1.15) translateY(-5px);
+  box-shadow: 0 10px 20px rgba(33, 150, 243, 0.6);
+  border-color: white;
+}
+
+/* Map Controls adjustment */
+.leaflet-bottom.leaflet-right {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+  margin-right: 10px;
+  align-items: end;
 }

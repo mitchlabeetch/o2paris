@@ -1,0 +1,30 @@
+
+> o2paris@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+
+ ✓ Starting...
+ ✓ Ready in 2s
+ ○ Compiling / ...
+ ✓ Compiled / in 6.2s (580 modules)
+ GET / 200 in 6988ms
+ ✓ Compiled in 729ms (285 modules)
+ ○ Compiling /admin ...
+ ✓ Compiled /admin in 3.9s (561 modules)
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /admin 200 in 4089ms
+ GET / 200 in 78ms
+ GET /admin 200 in 25ms
+ ✓ Compiled /api/auth in 406ms (319 modules)
+ POST /api/auth 200 in 678ms
+ ✓ Compiled /api/sounds in 132ms (321 modules)
+ ✓ Compiled (325 modules)
+ GET /api/config 200 in 320ms
+ GET /api/sounds 503 in 325ms
+ GET /api/pinpoints 503 in 333ms
+ GET / 200 in 345ms
+ ✓ Compiled in 1080ms (517 modules)
+ ✓ Compiled in 1509ms (517 modules)
+ ✓ Compiled in 426ms (517 modules)
