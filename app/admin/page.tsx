@@ -1,14 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Pinpoint, MapConfig, Sound } from '@/lib/db';
+import { getCookie } from '@/lib/client-utils';
+import Toast from '@/components/Toast';
+import Modal from '@/components/Modal';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [status, setStatus] = useState('');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   
   const [pinpoints, setPinpoints] = useState<Pinpoint[]>([]);
   const [sounds, setSounds] = useState<Sound[]>([]);
@@ -17,23 +20,16 @@ export default function AdminPage() {
   
   const [editingPinpoint, setEditingPinpoint] = useState<Partial<Pinpoint> | null>(null);
   const [initializingDb, setInitializingDb] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleteType, setDeleteType] = useState<'pinpoint' | 'sound' | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const hasToken = document.cookie.includes('admin_token');
-      setIsAuthenticated(hasToken);
-      
-      if (hasToken) {
-        loadData();
-      }
-    };
-    
-    checkAuth();
-  }, []);
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ message, type });
+  };
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
-      setStatus('');
       const [pinpointsRes, configRes, soundsRes] = await Promise.all([
         fetch('/api/pinpoints'),
         fetch('/api/config'),
@@ -56,9 +52,23 @@ export default function AdminPage() {
     } catch (err) {
       console.error('Error loading data:', err);
       const message = err instanceof Error ? err.message : 'erreur inconnue';
-      setStatus(`Impossible de charger les données. Vérifiez la base de données puis réessayez. (${message})`);
+      showToast(`Impossible de charger les données. (${message})`, 'error');
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = getCookie('admin_token');
+      const hasToken = !!token;
+      setIsAuthenticated(hasToken);
+      
+      if (hasToken) {
+        loadData();
+      }
+    };
+    
+    checkAuth();
+  }, [loadData]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,28 +116,20 @@ export default function AdminPage() {
       if (response.ok) {
         await loadData();
         setEditingPinpoint(null);
-        setStatus('Point sauvegardé.');
+        showToast('Point sauvegardé.', 'success');
       } else {
         const data = await response.json();
-        setStatus(data?.error || 'Impossible de sauvegarder le point.');
+        showToast(data?.error || 'Impossible de sauvegarder le point.', 'error');
       }
     } catch (err) {
       console.error('Error saving pinpoint:', err);
-      setStatus('Erreur lors de la sauvegarde du point.');
+      showToast('Erreur lors de la sauvegarde du point.', 'error');
     }
   };
 
-  const handleDeletePinpoint = async (id: number) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce point ?')) return;
-
-    try {
-      await fetch(`/api/pinpoints?id=${id}`, { method: 'DELETE' });
-      await loadData();
-      setStatus('Point supprimé.');
-    } catch (err) {
-      console.error('Error deleting pinpoint:', err);
-      setStatus('Erreur lors de la suppression du point.');
-    }
+  const handleDeletePinpoint = (id: number) => {
+    setDeleteId(id);
+    setDeleteType('pinpoint');
   };
 
   const handleUploadSound = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,11 +148,11 @@ export default function AdminPage() {
       if (response.ok) {
         const data = await response.json();
         await loadData();
-        setStatus(`Fichier téléchargé ! URL: /api/sounds?id=${data.id}`);
+        showToast(`Fichier téléchargé ! URL: /api/sounds?id=${data.id}`, 'success');
       }
     } catch (err) {
       console.error('Error uploading sound:', err);
-      setStatus('Erreur lors du téléversement du son.');
+      showToast('Erreur lors du téléversement du son.', 'error');
     }
   };
 
@@ -161,18 +163,17 @@ export default function AdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config),
       });
-      setStatus('Configuration sauvegardée !');
+      showToast('Configuration sauvegardée !', 'success');
       await loadData();
     } catch (err) {
       console.error('Error saving config:', err);
-      setStatus('Erreur lors de la sauvegarde de la configuration.');
+      showToast('Erreur lors de la sauvegarde de la configuration.', 'error');
     }
   };
 
   const handleInitDatabase = async () => {
     try {
       setInitializingDb(true);
-      setStatus('');
       const response = await fetch('/api/init');
       const data = await response.json();
 
@@ -180,11 +181,11 @@ export default function AdminPage() {
         throw new Error(data?.error || 'Initialisation échouée');
       }
 
-      setStatus(data?.message || 'Base initialisée avec les données de démonstration.');
+      showToast(data?.message || 'Base initialisée avec les données de démonstration.', 'success');
       await loadData();
     } catch (err) {
       console.error('Error initializing database:', err);
-      setStatus('Impossible d’initialiser la base. Vérifiez DATABASE_URL et réessayez.');
+      showToast("Impossible d'initialiser la base. Vérifiez DATABASE_URL et réessayez.", "error");
     } finally {
       setInitializingDb(false);
     }
@@ -193,10 +194,10 @@ export default function AdminPage() {
   const copySoundUrl = async (id: number) => {
     try {
       await navigator.clipboard.writeText(`/api/sounds?id=${id}`);
-      setStatus('URL copiée dans le presse-papier.');
+      showToast('URL copiée dans le presse-papier.', 'success');
     } catch (err) {
       console.error('Error copying sound url:', err);
-      setStatus('Impossible de copier l’URL du son.');
+      showToast("Impossible de copier l'URL du son.", "error");
     }
   };
 
@@ -281,15 +282,6 @@ export default function AdminPage() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {status && (
-          <div className="mb-6 bg-water-light/50 border border-water-main/50 text-water-deep px-4 py-3 rounded-lg flex items-center gap-3 shadow-sm animate-fade-in-down">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-water-main" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-            </svg>
-            {status}
-          </div>
-        )}
-
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
           <div className="flex border-b border-gray-100 overflow-x-auto">
             <button
@@ -659,6 +651,43 @@ export default function AdminPage() {
           </div>
         </div>
       </div>
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      <Modal
+        isOpen={deleteId !== null && deleteType !== null}
+        title="Confirmer la suppression"
+        onClose={() => {
+          setDeleteId(null);
+          setDeleteType(null);
+        }}
+        onConfirm={async () => {
+          if (deleteId && deleteType) {
+            if (deleteType === 'pinpoint') {
+              try {
+                await fetch(`/api/pinpoints?id=${deleteId}`, { method: 'DELETE' });
+                await loadData();
+                showToast('Point supprimé.', 'success');
+              } catch (err) {
+                console.error('Error deleting pinpoint:', err);
+                showToast('Erreur lors de la suppression du point.', 'error');
+              }
+            }
+            setDeleteId(null);
+            setDeleteType(null);
+          }
+        }}
+        confirmText="Supprimer"
+        isDestructive={true}
+      >
+        <p>Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible.</p>
+      </Modal>
     </div>
   );
 }

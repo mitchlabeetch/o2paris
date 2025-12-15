@@ -10,25 +10,26 @@
     "generate-password": "node scripts/generate-password.js"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^0.9.0",
+    "bcryptjs": "^2.4.3",
+    "leaflet": "^1.9.4",
+    "next": "^14",
+    "playwright": "^1.57.0",
     "react": "^18",
     "react-dom": "^18",
-    "next": "^14",
-    "leaflet": "^1.9.4",
-    "react-leaflet": "^4.2.1",
-    "@neondatabase/serverless": "^0.9.0",
-    "bcryptjs": "^2.4.3"
+    "react-leaflet": "^4.2.1"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/leaflet": "^1.9.8",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "@types/leaflet": "^1.9.8",
-    "@types/bcryptjs": "^2.4.6",
-    "tailwindcss": "^3.4.1",
-    "postcss": "^8",
     "autoprefixer": "^10.0.1",
     "eslint": "^8",
-    "eslint-config-next": "^14"
+    "eslint-config-next": "^14",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
   }
 }
