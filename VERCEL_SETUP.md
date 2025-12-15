@@ -16,8 +16,9 @@ Sounds are not being played when clicked (falling back to beep sound instead). T
 
 **DATABASE_URL**
 ```
-postgresql://neondb_owner:npg_XHto87GONDiu@ep-quiet-hat-agtqdlpy-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require
+postgresql://username:password@host.region.neon.tech/dbname?sslmode=require
 ```
+Replace with your actual Neon PostgreSQL connection string from https://neon.tech
 
 **ADMIN_PASSWORD_HASH**
 
@@ -26,6 +27,7 @@ Generate this with:
 git clone https://github.com/mitchlabeetch/o2paris.git
 cd o2paris
 npm install
+# Replace YourSecurePassword with your actual password
 npm run generate-password YourSecurePassword
 ```
 
@@ -95,7 +97,7 @@ User clicks marker → Opens popup → Tries to load sound
 
 ### Database initialization fails?
 
-1. **Check DATABASE_URL format**: Must start with `postgresql://` and include `?sslmode=require`
+1. **Check DATABASE_URL format**: Must be a valid PostgreSQL connection string (format: `postgresql://username:password@host.region.neon.tech/dbname?sslmode=require`)
 2. **Check Neon database is active**: Log into https://neon.tech and verify the database exists
 3. **Try manual SQL**: 
    - Go to Neon SQL Editor

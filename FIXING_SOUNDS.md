@@ -55,9 +55,9 @@ With `DATABASE_URL` configured, sounds are stored internally:
 
 ### Step 1: Configure DATABASE_URL in Vercel
 
-The DATABASE_URL provided in the issue:
+Your Neon PostgreSQL connection string should look like this:
 ```
-postgresql://neondb_owner:npg_XHto87GONDiu@ep-quiet-hat-agtqdlpy-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require
+postgresql://username:password@host.region.neon.tech/dbname?sslmode=require
 ```
 
 **To add it to Vercel:**
@@ -82,7 +82,7 @@ cd o2paris
 # Install dependencies
 npm install
 
-# Generate password hash
+# Generate password hash (replace YourSecurePassword123 with your actual password)
 npm run generate-password YourSecurePassword123
 
 # Copy the output hash
