@@ -27,7 +27,7 @@
 │  │              Components & Libraries                     │  │
 │  │  ┌──────────┐  ┌──────────┐  ┌──────────┐             │  │
 │  │  │   Map    │  │   Auth   │  │    DB    │             │  │
-│  │  │(Leaflet) │  │(bcrypt)  │  │  (Neon)  │             │  │
+│  │  │(Leaflet) │  │(Password)│  │  (Neon)  │             │  │
 │  │  └──────────┘  └──────────┘  └────┬─────┘             │  │
 │  └─────────────────────────────────────┼───────────────────┘  │
 └────────────────────────────────────────┼──────────────────────┘
@@ -77,7 +77,7 @@ Admin → /admin → Enter Password
                       ↓
                  POST /api/auth
                       ↓
-                 Verify bcrypt hash
+                 Verify password
                       ↓
                  Set session cookie
                       ↓
@@ -194,16 +194,16 @@ GET → Initialise les tables de la DB
 #### 2. lib/auth.ts
 ```typescript
 - verifyPassword(password): boolean
-- hashPassword(password): string
-- Utilise bcryptjs
+- Comparaison directe du mot de passe avec ADMIN_PASSWORD
+- Mot de passe par défaut en développement: Admin123
 ```
 
 ## Sécurité en Détail
 
 ### 1. Authentification
 ```
-Password → bcrypt.hash(pw, 10) → ADMIN_PASSWORD_HASH (env)
-Login    → bcrypt.compare(input, hash) → boolean
+Password → Stored as plain text in ADMIN_PASSWORD (env)
+Login    → Direct string comparison → boolean
 Success  → crypto.randomBytes(32) → session cookie
 ```
 
@@ -232,11 +232,11 @@ if (!latitude || !longitude || !title || !sound_url) {
 ```bash
 # Production (Vercel)
 DATABASE_URL=postgresql://...
-ADMIN_PASSWORD_HASH=$2a$10$...
+ADMIN_PASSWORD=YourStrongPassword
 
 # Development (.env local)
 DATABASE_URL=postgresql://localhost/...
-ADMIN_PASSWORD_HASH=... # Ou utiliser le défaut en dev
+ADMIN_PASSWORD=... # Ou utiliser le défaut: Admin123
 ```
 
 ## Performance et Optimisation
@@ -293,7 +293,7 @@ const Map = dynamic(() => import('@/components/Map'), {
 Settings → Environment Variables
    ↓
 DATABASE_URL → Encrypted → Available at runtime
-ADMIN_PASSWORD_HASH → Encrypted → Available at runtime
+ADMIN_PASSWORD → Encrypted → Available at runtime
 ```
 
 ## Base de Données

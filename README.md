@@ -49,7 +49,7 @@ cp .env.example .env
 
 Éditez `.env` avec vos informations :
 - `DATABASE_URL` : Votre chaîne de connexion Neon PostgreSQL
-- `ADMIN_PASSWORD_HASH` : Hash bcrypt de votre mot de passe admin
+- `ADMIN_PASSWORD` : Votre mot de passe admin en texte clair (par défaut: Admin123 en développement)
 - `NEXTAUTH_SECRET` : Secret généré avec `openssl rand -base64 32`
 
 4. Initialisez la base de données :
@@ -68,9 +68,9 @@ Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 1. Connectez votre dépôt GitHub à Vercel
 2. Configurez les variables d'environnement dans les paramètres Vercel :
    - `DATABASE_URL` : Chaîne de connexion Neon PostgreSQL (requis)
-   - `ADMIN_PASSWORD_HASH` : Hash bcrypt du mot de passe admin (requis pour production)
+   - `ADMIN_PASSWORD` : Votre mot de passe admin (requis pour production)
    
-   **Note importante pour Vercel** : Le nom de la variable d'environnement pour le mot de passe admin doit être exactement `ADMIN_PASSWORD_HASH`. Générez le hash avec `npm run generate-password VotreMotDePasse` et copiez le résultat dans les paramètres Vercel.
+   **Note importante pour Vercel** : Le nom de la variable d'environnement pour le mot de passe admin doit être exactement `ADMIN_PASSWORD`. Utilisez un mot de passe fort et sécurisez-le via les variables d'environnement cryptées de Vercel.
 3. Déployez !
 
 Vercel détectera automatiquement Next.js et utilisera la configuration appropriée.
@@ -153,10 +153,11 @@ o2paris/
 
 ## Sécurité
 
-- Les mots de passe sont hashés avec bcrypt
 - L'interface d'administration est protégée par authentification
+- Utilisez un mot de passe fort pour `ADMIN_PASSWORD` en production
 - Les variables d'environnement sensibles ne sont pas committées
 - Les sessions utilisent des cookies HTTP-only
+- Les mots de passe sont sécurisés via les variables d'environnement cryptées de Vercel
 
 ## Contribution
 

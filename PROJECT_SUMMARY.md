@@ -16,7 +16,7 @@ O2Paris est une application web de carte interactive développée pour Eau de Pa
 ### Backend
 - **API**: Next.js API Routes (serverless)
 - **Base de données**: Neon PostgreSQL (serverless)
-- **Authentification**: Bcrypt + cookies HTTP-only
+- **Authentification**: Password comparison + cookies HTTP-only
 - **Stockage audio**: Fichiers binaires dans PostgreSQL
 
 ### Déploiement
@@ -39,7 +39,7 @@ O2Paris est une application web de carte interactive développée pour Eau de Pa
 - Support formats multiples (MP3, WAV, OGG)
 
 ### 3. Administration
-- Authentification sécurisée (bcrypt)
+- Authentification sécurisée par mot de passe
 - Gestion CRUD des points
 - Upload de fichiers audio
 - Configuration de la carte
@@ -111,7 +111,7 @@ updated_at TIMESTAMP
 ## Sécurité
 
 ### Mesures Implémentées
-1. **Mots de passe**: Hashage bcrypt (10 rounds)
+1. **Mots de passe**: Stockés dans variables d'environnement cryptées
 2. **Sessions**: Tokens générés avec crypto.randomBytes
 3. **Cookies**: HTTP-only, Secure (production), SameSite strict
 4. **Variables d'env**: Secrets non committés
@@ -184,7 +184,6 @@ updated_at TIMESTAMP
 - `npm run build` - Build de production
 - `npm run start` - Serveur de production
 - `npm run lint` - Vérification ESLint
-- `npm run generate-password` - Génération hash bcrypt
 
 ## Déploiement
 
@@ -195,7 +194,7 @@ updated_at TIMESTAMP
 
 ### Étapes
 1. Créer DB sur Neon
-2. Générer hash mot de passe
+2. Choisir un mot de passe admin fort
 3. Configurer variables d'env Vercel
 4. Déployer depuis GitHub
 5. Visiter /api/init
@@ -204,7 +203,7 @@ updated_at TIMESTAMP
 ### Variables d'Environnement
 ```
 DATABASE_URL=postgresql://...
-ADMIN_PASSWORD_HASH=$2a$10$...
+ADMIN_PASSWORD=YourStrongPassword
 ```
 
 ## Évolutions Futures
