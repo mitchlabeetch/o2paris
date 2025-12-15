@@ -1,24 +1,15 @@
-import bcrypt from 'bcryptjs';
-
-const PLACEHOLDER_ADMIN_HASH = 'your_bcrypt_hashed_password';
-
 export async function verifyPassword(password: string): Promise<boolean> {
-  const hashedPassword = process.env.ADMIN_PASSWORD_HASH?.trim();
-  const isPlaceholder = !hashedPassword || hashedPassword === PLACEHOLDER_ADMIN_HASH;
+  const adminPassword = process.env.ADMIN_PASSWORD?.trim();
   
-  if (isPlaceholder) {
-    // For development only - allow 'Admin123' as default password
-    // Using a pre-generated hash to ensure consistency
-    if (process.env.NODE_ENV !== 'production') {
-      const defaultHash = '$2a$10$9ZfwyQCLtC0TFNHksZwpyuPPX7KIMhEUGhSg/rEhEAUwcCeTSmuBq';
-      return bcrypt.compare(password, defaultHash);
-    }
-    throw new Error('ADMIN_PASSWORD_HASH must be set in production');
+  // Development fallback
+  if (!adminPassword && process.env.NODE_ENV !== 'production') {
+    return password === 'Admin123';
   }
   
-  return bcrypt.compare(password, hashedPassword);
-}
-
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 10);
+  // Production requires ADMIN_PASSWORD to be set
+  if (!adminPassword && process.env.NODE_ENV === 'production') {
+    throw new Error('ADMIN_PASSWORD must be set in production');
+  }
+  
+  return password === adminPassword;
 }

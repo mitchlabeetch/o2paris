@@ -15,15 +15,11 @@ Ce guide vous aidera à déployer l'application O2Paris sur Vercel avec une base
 3. Notez la chaîne de connexion (elle ressemble à : `postgresql://user:password@host.region.neon.tech/dbname`)
 4. La base de données sera automatiquement créée
 
-## Étape 2 : Génération du Mot de Passe Admin
+## Étape 2 : Choix du Mot de Passe Admin
 
-Sur votre machine locale, générez un hash pour votre mot de passe admin :
+Choisissez un mot de passe fort pour votre compte administrateur. Utilisez au minimum 12 caractères avec une combinaison de lettres, chiffres et symboles.
 
-```bash
-node scripts/generate-password.js votre_mot_de_passe_securise
-```
-
-Notez le hash généré, vous en aurez besoin pour Vercel.
+⚠️ **Important** : Le mot de passe sera stocké en texte clair dans les variables d'environnement. Assurez-vous d'utiliser un mot de passe fort et unique.
 
 ## Étape 3 : Déploiement sur Vercel
 
@@ -33,10 +29,10 @@ Notez le hash généré, vous en aurez besoin pour Vercel.
 4. Configurez les variables d'environnement :
    - **Variable name**: `DATABASE_URL`  
      **Value**: Votre chaîne de connexion Neon PostgreSQL
-   - **Variable name**: `ADMIN_PASSWORD_HASH`  
-     **Value**: Le hash bcrypt généré à l'étape 2
+   - **Variable name**: `ADMIN_PASSWORD`  
+     **Value**: Votre mot de passe admin choisi à l'étape 2
    
-   ⚠️ **Important**: Les noms des variables doivent être exactement `DATABASE_URL` et `ADMIN_PASSWORD_HASH` (sensibles à la casse).
+   ⚠️ **Important**: Les noms des variables doivent être exactement `DATABASE_URL` et `ADMIN_PASSWORD` (sensibles à la casse).
 
 5. Cliquez sur "Deploy"
 
@@ -53,7 +49,7 @@ Si vous rencontrez une erreur, vérifiez que `DATABASE_URL` est correctement con
 ## Étape 6 : Premier Accès à l'Administration
 
 1. Visitez : `https://votre-app.vercel.app/admin`
-2. Connectez-vous avec le mot de passe que vous avez utilisé pour générer le hash à l'étape 2
+2. Connectez-vous avec le mot de passe que vous avez choisi à l'étape 2
 3. Commencez à ajouter des points sonores !
 
 ## Configuration du Domaine Personnalisé (Optionnel)
@@ -134,9 +130,9 @@ Dans l'onglet "Configuration" :
 
 ### Impossible de se connecter à l'admin
 
-- Vérifiez que `ADMIN_PASSWORD_HASH` est correctement configuré
-- Régénérez un nouveau hash avec `scripts/generate-password.js`
+- Vérifiez que `ADMIN_PASSWORD` est correctement configuré dans Vercel
 - Vérifiez que vous utilisez le bon mot de passe
+- En développement, le mot de passe par défaut est `Admin123`
 
 ## Mises à Jour
 
@@ -153,7 +149,8 @@ Pour toute question ou problème, ouvrez une issue sur GitHub.
 ## Sécurité
 
 - Ne partagez jamais votre `DATABASE_URL`
-- Ne partagez jamais votre `ADMIN_PASSWORD_HASH`
+- Ne partagez jamais votre `ADMIN_PASSWORD`
 - Utilisez des mots de passe forts (minimum 12 caractères)
 - Changez régulièrement votre mot de passe admin
-- En production, assurez-vous que `ADMIN_PASSWORD_HASH` est toujours défini
+- En production, assurez-vous que `ADMIN_PASSWORD` est toujours défini
+- Les mots de passe sont sécurisés via les variables d'environnement cryptées de Vercel
