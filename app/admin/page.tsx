@@ -77,7 +77,8 @@ export default function AdminPage() {
         setPassword('');
         loadData();
       } else {
-        setError('Mot de passe incorrect');
+        const data = await response.json();
+        setError(data.error || 'Mot de passe incorrect');
       }
     } catch (err) {
       setError('Erreur de connexion');
@@ -201,15 +202,18 @@ export default function AdminPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-water-light to-water-dark flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
-          <h1 className="text-3xl font-bold text-water-dark mb-6 text-center">
-            Administration O2Paris
-          </h1>
+      <div className="min-h-screen bg-gradient-to-br from-water-light via-white to-water-light flex items-center justify-center p-4">
+        <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl p-8 max-w-md w-full border border-water-main/20">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-serif font-bold text-water-dark mb-2">
+              O2Paris
+            </h1>
+            <p className="text-gray-500 font-sans uppercase tracking-widest text-xs">Administration</p>
+          </div>
           
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2 font-sans">
                 Mot de passe
               </label>
               <input
@@ -223,21 +227,26 @@ export default function AdminPage() {
             </div>
             
             {error && (
-              <div className="text-red-600 text-sm">{error}</div>
+              <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                {error}
+              </div>
             )}
             
             <button
               type="submit"
               disabled={loading}
-              className="water-button w-full"
+              className="water-button w-full py-3 text-lg"
             >
               {loading ? 'Connexion...' : 'Se connecter'}
             </button>
           </form>
           
           {process.env.NODE_ENV !== 'production' && (
-            <div className="mt-6 text-xs text-gray-500 text-center">
-              Développement - Mot de passe par défaut: Admin123
+            <div className="mt-8 pt-4 border-t border-gray-100 text-xs text-gray-400 text-center font-mono">
+              Dev Mode • Default: Admin123
             </div>
           )}
         </div>
@@ -246,22 +255,25 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-water-dark">Administration O2Paris</h1>
-          <div className="flex gap-4">
+    <div className="min-h-screen bg-gray-50 font-sans">
+      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-3">
+             <div className="w-8 h-8 rounded-full bg-water-main flex items-center justify-center text-white font-bold">A</div>
+             <h1 className="text-xl font-bold text-water-deep font-serif">O2Paris Admin</h1>
+          </div>
+          <div className="flex gap-3 text-sm">
             <button
               onClick={handleInitDatabase}
               disabled={initializingDb}
-              className="water-button"
+              className="px-4 py-2 text-water-dark bg-water-light/50 hover:bg-water-light rounded-lg transition-colors border border-transparent hover:border-water-main/30"
             >
-              {initializingDb ? 'Initialisation...' : 'Initialiser + seed'}
+              {initializingDb ? '...' : 'Reset DB'}
             </button>
-            <a href="/" className="text-water-dark hover:text-water-deep">
-              Voir la carte
+            <a href="/" className="px-4 py-2 text-gray-600 hover:text-water-main bg-gray-100 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-200">
+              Voir carte
             </a>
-            <button onClick={handleLogout} className="text-red-600 hover:text-red-700">
+            <button onClick={handleLogout} className="px-4 py-2 text-red-600 hover:text-white bg-red-50 hover:bg-red-500 rounded-lg transition-colors">
               Déconnexion
             </button>
           </div>
@@ -270,49 +282,53 @@ export default function AdminPage() {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {status && (
-          <div className="mb-4 bg-blue-50 border border-water-main text-water-dark px-4 py-3 rounded-lg">
+          <div className="mb-6 bg-water-light/50 border border-water-main/50 text-water-deep px-4 py-3 rounded-lg flex items-center gap-3 shadow-sm animate-fade-in-down">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-water-main" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
             {status}
           </div>
         )}
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="flex border-b border-gray-200">
+
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+          <div className="flex border-b border-gray-100 overflow-x-auto">
             <button
               onClick={() => setActiveTab('pinpoints')}
-              className={`px-6 py-3 font-medium ${
+              className={`px-8 py-4 font-medium text-sm transition-colors whitespace-nowrap ${
                 activeTab === 'pinpoints'
-                  ? 'text-water-dark border-b-2 border-water-dark'
-                  : 'text-gray-500'
+                  ? 'text-water-main border-b-2 border-water-main bg-water-light/10'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
               }`}
             >
-              Points sur la carte
+              📍 Points ({pinpoints.length})
             </button>
             <button
               onClick={() => setActiveTab('sounds')}
-              className={`px-6 py-3 font-medium ${
+              className={`px-8 py-4 font-medium text-sm transition-colors whitespace-nowrap ${
                 activeTab === 'sounds'
-                  ? 'text-water-dark border-b-2 border-water-dark'
-                  : 'text-gray-500'
+                  ? 'text-water-main border-b-2 border-water-main bg-water-light/10'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
               }`}
             >
-              Sons
+              🔊 Sons ({sounds.length})
             </button>
             <button
               onClick={() => setActiveTab('config')}
-              className={`px-6 py-3 font-medium ${
+              className={`px-8 py-4 font-medium text-sm transition-colors whitespace-nowrap ${
                 activeTab === 'config'
-                  ? 'text-water-dark border-b-2 border-water-dark'
-                  : 'text-gray-500'
+                  ? 'text-water-main border-b-2 border-water-main bg-water-light/10'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
               }`}
             >
-              Configuration
+              ⚙️ Configuration
             </button>
           </div>
 
-          <div className="p-6">
+          <div className="p-6 sm:p-8 bg-gray-50/50">
             {activeTab === 'pinpoints' && (
               <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-bold text-gray-800">Gérer les points</h2>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-bold text-gray-800">Gestion des Points</h2>
                   <button
                     onClick={() => setEditingPinpoint({
                       latitude: 48.8566,
@@ -322,134 +338,156 @@ export default function AdminPage() {
                       sound_url: '',
                       icon: '💧',
                     })}
-                    className="water-button"
+                    className="water-button flex items-center gap-2"
                   >
-                    + Nouveau point
+                    <span>+</span> Nouveau Point
                   </button>
                 </div>
 
                 {editingPinpoint && (
-                  <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-                    <h3 className="font-bold text-gray-800">
-                      {editingPinpoint.id ? 'Modifier' : 'Nouveau'} point
+                  <div className="bg-white p-6 rounded-xl shadow-lg border border-water-main/20 space-y-4 mb-8 animate-fade-in">
+                    <h3 className="font-bold text-water-dark border-b border-gray-100 pb-2 mb-4">
+                      {editingPinpoint.id ? 'Modifier le point' : 'Nouveau point'}
                     </h3>
                     
-                    <div className="grid grid-cols-2 gap-3">
-                      <input
-                        type="number"
-                        step="0.000001"
-                        placeholder="Latitude"
-                        value={editingPinpoint.latitude || ''}
-                        onChange={(e) => setEditingPinpoint({
-                          ...editingPinpoint,
-                          latitude: parseFloat(e.target.value),
-                        })}
-                        className="water-input"
-                      />
-                      <input
-                        type="number"
-                        step="0.000001"
-                        placeholder="Longitude"
-                        value={editingPinpoint.longitude || ''}
-                        onChange={(e) => setEditingPinpoint({
-                          ...editingPinpoint,
-                          longitude: parseFloat(e.target.value),
-                        })}
-                        className="water-input"
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Latitude</label>
+                        <input
+                          type="number"
+                          step="0.000001"
+                          value={editingPinpoint.latitude || ''}
+                          onChange={(e) => setEditingPinpoint({
+                            ...editingPinpoint,
+                            latitude: parseFloat(e.target.value),
+                          })}
+                          className="water-input w-full"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Longitude</label>
+                        <input
+                          type="number"
+                          step="0.000001"
+                          value={editingPinpoint.longitude || ''}
+                          onChange={(e) => setEditingPinpoint({
+                            ...editingPinpoint,
+                            longitude: parseFloat(e.target.value),
+                          })}
+                          className="water-input w-full"
+                        />
+                      </div>
                     </div>
-                    
-                    <input
-                      type="text"
-                      placeholder="Titre"
-                      value={editingPinpoint.title || ''}
-                      onChange={(e) => setEditingPinpoint({
-                        ...editingPinpoint,
-                        title: e.target.value,
-                      })}
-                      className="water-input w-full"
-                    />
-                    
-                    <textarea
-                      placeholder="Description"
-                      value={editingPinpoint.description || ''}
-                      onChange={(e) => setEditingPinpoint({
-                        ...editingPinpoint,
-                        description: e.target.value,
-                      })}
-                      className="water-input w-full"
-                      rows={3}
-                    />
-                    
-                    <input
-                      type="text"
-                      placeholder="URL du son (ex: /api/sounds?id=1)"
-                      value={editingPinpoint.sound_url || ''}
-                      onChange={(e) => setEditingPinpoint({
-                        ...editingPinpoint,
-                        sound_url: e.target.value,
-                      })}
-                      className="water-input w-full"
-                    />
-                    
-                    <div className="space-y-1">
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Titre</label>
                       <input
                         type="text"
-                        placeholder="Icône personnalisée (emoji ou caractère)"
-                        value={editingPinpoint.icon || ''}
+                        value={editingPinpoint.title || ''}
                         onChange={(e) => setEditingPinpoint({
                           ...editingPinpoint,
-                          icon: e.target.value,
+                          title: e.target.value,
                         })}
                         className="water-input w-full"
                       />
-                      <p className="text-xs text-gray-500">
-                        Exemple : 💧 🌊 🎵 — laisser vide pour utiliser l’icône par défaut.
-                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Description</label>
+                      <textarea
+                        value={editingPinpoint.description || ''}
+                        onChange={(e) => setEditingPinpoint({
+                          ...editingPinpoint,
+                          description: e.target.value,
+                        })}
+                        className="water-input w-full min-h-[100px]"
+                        rows={3}
+                      />
                     </div>
                     
-                    <div className="flex gap-2">
-                      <button onClick={handleSavePinpoint} className="water-button">
-                        Sauvegarder
-                      </button>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">URL Audio</label>
+                      <input
+                        type="text"
+                        placeholder="/api/sounds?id=..."
+                        value={editingPinpoint.sound_url || ''}
+                        onChange={(e) => setEditingPinpoint({
+                          ...editingPinpoint,
+                          sound_url: e.target.value,
+                        })}
+                        className="water-input w-full font-mono text-sm"
+                      />
+                    </div>
+                    
+                    <div>
+                       <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Icône</label>
+                       <div className="flex gap-2 items-center">
+                          <input
+                            type="text"
+                            placeholder="💧"
+                            value={editingPinpoint.icon || ''}
+                            onChange={(e) => setEditingPinpoint({
+                              ...editingPinpoint,
+                              icon: e.target.value,
+                            })}
+                            className="water-input w-20 text-center text-xl"
+                          />
+                          <span className="text-xs text-gray-500">Emoji ou caractère simple</span>
+                       </div>
+                    </div>
+
+                    <div className="flex gap-3 pt-4 border-t border-gray-100 mt-4 justify-end">
                       <button
                         onClick={() => setEditingPinpoint(null)}
-                        className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+                        className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                       >
                         Annuler
+                      </button>
+                      <button onClick={handleSavePinpoint} className="water-button">
+                        Sauvegarder
                       </button>
                     </div>
                   </div>
                 )}
 
-                <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {pinpoints.map((pinpoint) => (
                     <div
                       key={pinpoint.id}
-                     className="bg-gray-50 p-4 rounded-lg flex justify-between items-start"
-                   >
-                     <div>
-                        <h4 className="font-bold text-gray-800">
-                          {pinpoint.icon ? `${pinpoint.icon} ` : ''}{pinpoint.title}
-                        </h4>
-                        <p className="text-sm text-gray-600">{pinpoint.description}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {pinpoint.latitude}, {pinpoint.longitude}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
+                      className="bg-white p-5 rounded-xl border border-gray-200 hover:shadow-md transition-shadow group relative"
+                    >
+                      <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <button
                           onClick={() => setEditingPinpoint(pinpoint)}
-                          className="text-water-dark hover:text-water-deep"
+                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-full"
+                          title="Modifier"
                         >
-                          Modifier
+                          ✏️
                         </button>
                         <button
                           onClick={() => handleDeletePinpoint(pinpoint.id)}
-                          className="text-red-600 hover:text-red-700"
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-full"
+                          title="Supprimer"
                         >
-                          Supprimer
+                          🗑️
                         </button>
+                      </div>
+
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-2xl bg-water-light/30 w-10 h-10 flex items-center justify-center rounded-full">
+                          {pinpoint.icon || '💧'}
+                        </span>
+                        <h4 className="font-bold text-gray-800 truncate pr-16" title={pinpoint.title}>
+                          {pinpoint.title}
+                        </h4>
+                      </div>
+
+                      <p className="text-sm text-gray-600 mb-4 line-clamp-2 h-10">
+                        {pinpoint.description}
+                      </p>
+
+                      <div className="flex items-center justify-between text-xs text-gray-400 font-mono bg-gray-50 p-2 rounded">
+                        <span>{pinpoint.latitude.toFixed(4)}, {pinpoint.longitude.toFixed(4)}</span>
                       </div>
                     </div>
                   ))}
@@ -459,93 +497,86 @@ export default function AdminPage() {
 
             {activeTab === 'sounds' && (
               <div className="space-y-6">
-                <h2 className="text-xl font-bold text-gray-800">Gérer les sons</h2>
+                <h2 className="text-xl font-bold text-gray-800 mb-4">Bibliothèque Sonore</h2>
                 
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Télécharger un nouveau son
-                  </label>
-                  <input
-                    type="file"
-                    accept="audio/*"
-                    onChange={handleUploadSound}
-                    className="block w-full text-sm text-gray-500
-                      file:mr-4 file:py-2 file:px-4
-                      file:rounded-lg file:border-0
-                      file:text-sm file:font-semibold
-                      file:bg-water-main file:text-white
-                      hover:file:bg-water-dark
-                      cursor-pointer"
-                  />
-                  <p className="text-xs text-gray-500 mt-2">
-                    Formats acceptés: MP3, WAV, OGG, etc.
-                  </p>
-                </div>
-
-                <div className="text-sm text-gray-600 bg-blue-50 p-4 rounded-lg">
-                  <p className="font-semibold mb-2">Instructions:</p>
-                  <ol className="list-decimal list-inside space-y-1">
-                    <li>Téléchargez un fichier audio ci-dessus</li>
-                    <li>Copiez l&apos;URL grâce au bouton associé ou notez l&apos;ID</li>
-                    <li>Utilisez /api/sounds?id=ID dans le champ &quot;URL du son&quot; d&apos;un point</li>
-                  </ol>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-gray-800">Sons disponibles</h3>
-                    <span className="text-xs text-gray-500">{sounds.length} fichier(s)</span>
+                <div className="bg-white p-6 rounded-xl border-2 border-dashed border-water-main/30 hover:border-water-main transition-colors text-center group">
+                  <div className="mb-3">
+                    <svg className="mx-auto h-12 w-12 text-water-main/50 group-hover:text-water-main" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                      <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 cursor-pointer">
+                    <span className="text-water-main font-bold hover:underline">Cliquez pour téléverser</span> ou glissez un fichier ici
+                    <input
+                      type="file"
+                      accept="audio/*"
+                      onChange={handleUploadSound}
+                      className="hidden"
+                    />
+                  </label>
+                  <p className="text-xs text-gray-500">MP3, WAV, OGG jusqu&apos;à 10MB</p>
+                </div>
+
+                <div className="space-y-3">
                   {sounds.length === 0 ? (
-                    <p className="text-sm text-gray-600">
-                      Aucun son pour le moment. Téléversez-en un pour le rendre disponible dans vos points.
-                    </p>
+                    <div className="text-center py-10 text-gray-400 italic">
+                      Aucun son dans la bibliothèque.
+                    </div>
                   ) : (
-                    <div className="space-y-2">
-                      {sounds.map((sound) => (
+                    sounds.map((sound) => (
                         <div
                           key={sound.id}
-                          className="flex items-center justify-between bg-gray-50 p-3 rounded-lg"
+                          className="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
                         >
-                          <div>
-                            <p className="font-medium text-gray-800">{sound.filename}</p>
-                            <p className="text-xs text-gray-500">
-                              ID: {sound.id} • {(sound.size / 1024).toFixed(1)} Ko
-                            </p>
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500">
+                               🎵
+                            </div>
+                            <div>
+                                <p className="font-medium text-gray-800 truncate max-w-[200px] sm:max-w-md" title={sound.filename}>
+                                  {sound.filename}
+                                </p>
+                                <p className="text-xs text-gray-400 font-mono">
+                                  ID: {sound.id} • {(sound.size / 1024).toFixed(1)} KB
+                                </p>
+                            </div>
                           </div>
-                          <button onClick={() => copySoundUrl(sound.id)} className="water-button">
-                            Copier l&apos;URL
+                          <button
+                            onClick={() => copySoundUrl(sound.id)}
+                            className="px-3 py-1 text-xs font-medium text-water-main hover:bg-water-light/20 rounded-full border border-water-main/30 transition-colors"
+                          >
+                            Copier Lien
                           </button>
                         </div>
-                      ))}
-                    </div>
+                    ))
                   )}
                 </div>
               </div>
             )}
 
             {activeTab === 'config' && (
-              <div className="space-y-6">
-                <h2 className="text-xl font-bold text-gray-800">Configuration de la carte</h2>
+              <div className="max-w-2xl mx-auto space-y-8">
+                <h2 className="text-xl font-bold text-gray-800 border-b border-gray-200 pb-2">Configuration Globale</h2>
                 
-                <div className="space-y-4">
+                <div className="space-y-6 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      URL des tuiles de carte
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                      Fournisseur de Tuiles (Tile Layer)
                     </label>
                     <input
                       type="text"
                       value={config.tile_layer_url || ''}
                       onChange={(e) => setConfig({ ...config, tile_layer_url: e.target.value })}
-                      className="water-input w-full"
-                      placeholder="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      className="water-input w-full font-mono text-sm"
+                      placeholder="https://..."
                     />
+                    <p className="text-xs text-gray-400 mt-1">URL template pour Leaflet</p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Latitude du centre
+                      <label className="block text-sm font-bold text-gray-700 mb-2">
+                        Lat Centre
                       </label>
                       <input
                         type="number"
@@ -556,8 +587,8 @@ export default function AdminPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Longitude du centre
+                      <label className="block text-sm font-bold text-gray-700 mb-2">
+                        Lng Centre
                       </label>
                       <input
                         type="number"
@@ -571,8 +602,8 @@ export default function AdminPage() {
 
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Zoom initial
+                      <label className="block text-sm font-bold text-gray-700 mb-2">
+                        Zoom Init
                       </label>
                       <input
                         type="number"
@@ -582,8 +613,8 @@ export default function AdminPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Zoom min
+                      <label className="block text-sm font-bold text-gray-700 mb-2">
+                        Min
                       </label>
                       <input
                         type="number"
@@ -593,8 +624,8 @@ export default function AdminPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Zoom max
+                      <label className="block text-sm font-bold text-gray-700 mb-2">
+                        Max
                       </label>
                       <input
                         type="number"
@@ -606,20 +637,22 @@ export default function AdminPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
                       Attribution
                     </label>
-                    <input
-                      type="text"
+                    <textarea
                       value={config.attribution || ''}
                       onChange={(e) => setConfig({ ...config, attribution: e.target.value })}
-                      className="water-input w-full"
+                      className="water-input w-full text-sm"
+                      rows={2}
                     />
                   </div>
 
-                  <button onClick={handleSaveConfig} className="water-button">
-                    Sauvegarder la configuration
-                  </button>
+                  <div className="pt-4 border-t border-gray-100 flex justify-end">
+                     <button onClick={handleSaveConfig} className="water-button px-8">
+                       Sauvegarder
+                     </button>
+                  </div>
                 </div>
               </div>
             )}
