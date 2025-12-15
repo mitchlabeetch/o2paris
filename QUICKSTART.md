@@ -10,19 +10,16 @@
 # Copier la connection string (DATABASE_URL)
 ```
 
-### 2️⃣ Générer un Mot de Passe Admin
+### 2️⃣ Choisir un Mot de Passe Admin
 ```bash
-# Cloner le repo
-git clone https://github.com/lightmyfireadmin/o2paris.git
-cd o2paris
+# Choisir un mot de passe fort avec:
+# - Minimum 12 caractères
+# - Lettres majuscules et minuscules
+# - Chiffres
+# - Symboles
 
-# Installer les dépendances
-npm install
-
-# Générer le hash
-npm run generate-password VotreMotDePasseSecurise
-
-# Copier le hash retourné
+# Exemple: MyStr0ng!P@ssw0rd2024
+# Vous utiliserez ce mot de passe directement lors du déploiement
 ```
 
 ### 3️⃣ Déployer sur Vercel
@@ -33,7 +30,7 @@ npm run generate-password VotreMotDePasseSecurise
 3. Importer depuis GitHub: lightmyfireadmin/o2paris
 4. Configurer les variables d'environnement:
    - DATABASE_URL: [votre connection string Neon]
-   - ADMIN_PASSWORD_HASH: [le hash généré]
+   - ADMIN_PASSWORD: [votre mot de passe choisi à l'étape 2]
 5. Cliquer "Deploy"
 
 # Option B: Via CLI
@@ -135,8 +132,7 @@ npm run build                  # Créer build de production
 npm run start                  # Lancer build de production
 npm run lint                   # Vérifier le code
 
-# Utilitaires
-npm run generate-password pwd  # Générer hash bcrypt
+
 ```
 
 ## 🐛 Résolution Rapide de Problèmes
@@ -157,9 +153,9 @@ npm run generate-password pwd  # Générer hash bcrypt
 
 ### Impossible de se connecter à l'admin
 ```
-✓ Vérifier ADMIN_PASSWORD_HASH dans Vercel
-✓ Régénérer le hash si nécessaire
-✓ En dev, utiliser: admin123
+✓ Vérifier ADMIN_PASSWORD dans Vercel
+✓ Vérifier que vous utilisez le bon mot de passe
+✓ En dev, utiliser: Admin123
 ```
 
 ### Le son ne se joue pas
@@ -182,7 +178,7 @@ npm run generate-password pwd  # Générer hash bcrypt
 ## 🔐 Sécurité - Checklist
 
 - [ ] DATABASE_URL configuré et sécurisé
-- [ ] ADMIN_PASSWORD_HASH généré avec mot de passe fort (12+ caractères)
+- [ ] ADMIN_PASSWORD configuré avec mot de passe fort (12+ caractères)
 - [ ] Variables d'environnement jamais committées dans Git
 - [ ] Mot de passe admin changé après déploiement initial
 - [ ] HTTPS activé (automatique sur Vercel)

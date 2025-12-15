@@ -31,14 +31,11 @@ cp .env.example .env
 4. Configurez vos variables d'environnement dans `.env` :
 ```env
 DATABASE_URL=your_neon_postgresql_connection_string
-ADMIN_PASSWORD_HASH=your_bcrypt_hash
+ADMIN_PASSWORD=your_admin_password
 NEXTAUTH_SECRET=your_secret
 ```
 
-Pour générer un hash de mot de passe :
-```bash
-npm run generate-password your_password
-```
+Pour le développement, vous pouvez laisser `ADMIN_PASSWORD` vide, le mot de passe par défaut sera `Admin123`.
 
 5. Initialisez la base de données :
 Démarrez le serveur de développement et visitez `http://localhost:3000/api/init`
@@ -153,7 +150,7 @@ Puis créez une Pull Request sur GitHub.
 ### Sécurité
 
 - Ne committez JAMAIS de secrets ou credentials
-- Hashage des mots de passe avec bcrypt
+- Utilisez des mots de passe forts en production
 - Validation et sanitization des entrées
 - Protection CSRF pour les routes sensibles
 
