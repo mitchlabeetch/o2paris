@@ -75,6 +75,8 @@ Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur.
 
 Vercel détectera automatiquement Next.js et utilisera la configuration appropriée.
 
+**⚠️ Important**: Si les sons ne se jouent pas après le déploiement (tombent en son de bip), consultez le guide [VERCEL_SETUP.md](./VERCEL_SETUP.md) pour configurer correctement la variable DATABASE_URL.
+
 ## Utilisation
 
 ### Interface Principale
