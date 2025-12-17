@@ -258,11 +258,21 @@ export default function AdminPage() {
 
   const handleSaveConfig = async () => {
     try {
-      await fetch("/api/config", {
+      const response = await fetch("/api/config", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(config),
       });
+
+      if (!response.ok) {
+        const data = await response.json();
+        showToast(
+          data?.error || "Impossible de sauvegarder la configuration.",
+          "error"
+        );
+        return;
+      }
+
       showToast("Configuration sauvegardée !", "success");
       await loadData();
     } catch (err) {
@@ -296,7 +306,8 @@ export default function AdminPage() {
 
   const copySoundUrl = async (id: number, e: React.MouseEvent) => {
     try {
-      await navigator.clipboard.writeText(`/api/sounds?id=${id}`);
+      const fullUrl = `${window.location.origin}/api/sounds?id=${id}`;
+      await navigator.clipboard.writeText(fullUrl);
       const btn = e.currentTarget as HTMLButtonElement;
       const originalText = btn.innerText;
       btn.innerText = "Copié !";
