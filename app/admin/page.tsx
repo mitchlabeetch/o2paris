@@ -264,17 +264,16 @@ export default function AdminPage() {
         body: JSON.stringify(config),
       });
 
-      if (!response.ok) {
+      if (response.ok) {
+        showToast("Configuration sauvegardée !", "success");
+        await loadData();
+      } else {
         const data = await response.json();
         showToast(
           data?.error || "Impossible de sauvegarder la configuration.",
           "error"
         );
-        return;
       }
-
-      showToast("Configuration sauvegardée !", "success");
-      await loadData();
     } catch (err) {
       console.error("Error saving config:", err);
       showToast("Erreur lors de la sauvegarde de la configuration.", "error");
