@@ -6,7 +6,8 @@ export default function WaterCurtain() {
   const [show, setShow] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShow(false), 1200);
+    // Updated to 2200ms to match the new 2s animation duration (with 200ms buffer)
+    const timer = setTimeout(() => setShow(false), 2200);
     return () => clearTimeout(timer);
   }, []);
 
