@@ -58,8 +58,17 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const { tile_layer_url, center_lat, center_lng, zoom_level, max_zoom, min_zoom, attribution, background_theme } = body;
 
+    // Convert inputs to numbers
+    // This handles cases where database returns decimals as strings (e.g. "48.8566")
+    // and they are sent back as strings if not modified in the frontend
+    const centerLatNum = Number(center_lat);
+    const centerLngNum = Number(center_lng);
+    const zoomLevelNum = Number(zoom_level);
+    const maxZoomNum = Number(max_zoom);
+    const minZoomNum = Number(min_zoom);
+
     // Validate required numeric fields
-    const numericFields = [center_lat, center_lng, zoom_level, max_zoom, min_zoom];
+    const numericFields = [centerLatNum, centerLngNum, zoomLevelNum, maxZoomNum, minZoomNum];
     if (!numericFields.every(field => typeof field === 'number' && !isNaN(field))) {
       return NextResponse.json(
         { error: 'Invalid configuration: All numeric fields must have valid values' },
@@ -82,7 +91,7 @@ export async function PUT(request: NextRequest) {
       // Insert new config
       const result = await sql`
         INSERT INTO map_config (tile_layer_url, center_lat, center_lng, zoom_level, max_zoom, min_zoom, attribution, background_theme)
-        VALUES (${tile_layer_url}, ${center_lat}, ${center_lng}, ${zoom_level}, ${max_zoom}, ${min_zoom}, ${attribution || ''}, ${background_theme || 'water'})
+        VALUES (${tile_layer_url}, ${centerLatNum}, ${centerLngNum}, ${zoomLevelNum}, ${maxZoomNum}, ${minZoomNum}, ${attribution || ''}, ${background_theme || 'water'})
         RETURNING *
       `;
       return NextResponse.json(result[0]);
@@ -93,11 +102,11 @@ export async function PUT(request: NextRequest) {
       UPDATE map_config
       SET 
         tile_layer_url = ${tile_layer_url},
-        center_lat = ${center_lat},
-        center_lng = ${center_lng},
-        zoom_level = ${zoom_level},
-        max_zoom = ${max_zoom},
-        min_zoom = ${min_zoom},
+        center_lat = ${centerLatNum},
+        center_lng = ${centerLngNum},
+        zoom_level = ${zoomLevelNum},
+        max_zoom = ${maxZoomNum},
+        min_zoom = ${minZoomNum},
         attribution = ${attribution || ''},
         background_theme = ${background_theme || 'water'},
         updated_at = CURRENT_TIMESTAMP
