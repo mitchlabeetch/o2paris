@@ -56,16 +56,33 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { tile_layer_url, center_lat, center_lng, zoom_level, max_zoom, min_zoom, attribution, background_theme } = body;
 
-    // Convert inputs to numbers
-    // This handles cases where database returns decimals as strings (e.g. "48.8566")
-    // and they are sent back as strings if not modified in the frontend
-    const centerLatNum = Number(center_lat);
-    const centerLngNum = Number(center_lng);
-    const zoomLevelNum = Number(zoom_level);
-    const maxZoomNum = Number(max_zoom);
-    const minZoomNum = Number(min_zoom);
+    // Fetch current configuration to allow partial updates
+    const currentConfigRows = await sql`SELECT * FROM map_config ORDER BY id DESC LIMIT 1`;
+    const currentConfig = currentConfigRows.length > 0 ? currentConfigRows[0] : DEFAULT_MAP_CONFIG;
+
+    // Merge body with current config.
+    // Use body value if present (and not null/undefined), else use current config.
+    // We treat null/undefined in body as "do not update".
+    const getValue = (key: string, current: any) => {
+      return body[key] !== undefined && body[key] !== null ? body[key] : current;
+    };
+
+    const tile_layer_url = getValue('tile_layer_url', currentConfig.tile_layer_url);
+    const attribution = getValue('attribution', currentConfig.attribution);
+    const background_theme = getValue('background_theme', currentConfig.background_theme);
+
+    // Numeric fields need special handling because they might be strings in body OR currentConfig (if from DB)
+    const getNumericValue = (key: string, current: any) => {
+      const val = body[key] !== undefined && body[key] !== null ? body[key] : current;
+      return Number(val);
+    };
+
+    const centerLatNum = getNumericValue('center_lat', currentConfig.center_lat);
+    const centerLngNum = getNumericValue('center_lng', currentConfig.center_lng);
+    const zoomLevelNum = getNumericValue('zoom_level', currentConfig.zoom_level);
+    const maxZoomNum = getNumericValue('max_zoom', currentConfig.max_zoom);
+    const minZoomNum = getNumericValue('min_zoom', currentConfig.min_zoom);
 
     // Validate required numeric fields
     const numericFields = [centerLatNum, centerLngNum, zoomLevelNum, maxZoomNum, minZoomNum];
@@ -84,10 +101,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Get the current config ID
-    const currentConfig = await sql`SELECT id FROM map_config ORDER BY id DESC LIMIT 1`;
-    
-    if (currentConfig.length === 0) {
+    if (currentConfigRows.length === 0) {
       // Insert new config
       const result = await sql`
         INSERT INTO map_config (tile_layer_url, center_lat, center_lng, zoom_level, max_zoom, min_zoom, attribution, background_theme)
@@ -110,7 +124,7 @@ export async function PUT(request: NextRequest) {
         attribution = ${attribution || ''},
         background_theme = ${background_theme || 'water'},
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = ${currentConfig[0].id}
+      WHERE id = ${currentConfigRows[0].id}
       RETURNING *
     `;
 
