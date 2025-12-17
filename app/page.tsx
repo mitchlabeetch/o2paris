@@ -84,7 +84,7 @@ export default async function Home() {
       <WaterCurtain />
       
       {/* Map layer with padding - positioned to fill viewport with padding */}
-      <div className="absolute inset-0 p-2.5 md:p-10 z-0">
+      <div className="absolute inset-0 p-2.5 md:p-10 z-0 max-h-[85vh] md:max-h-full">
         <Map pinpoints={pinpoints} config={config} />
       </div>
       
