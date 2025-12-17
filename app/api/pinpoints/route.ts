@@ -11,7 +11,13 @@ export async function GET() {
     }
 
     const pinpoints = await sql`SELECT * FROM pinpoints ORDER BY id`;
-    return NextResponse.json(pinpoints);
+    // Convert DECIMAL strings to numbers for latitude/longitude
+    const normalizedPinpoints = pinpoints.map((p: Record<string, unknown>) => ({
+      ...p,
+      latitude: Number(p.latitude),
+      longitude: Number(p.longitude),
+    }));
+    return NextResponse.json(normalizedPinpoints);
   } catch (error) {
     console.error('Error fetching pinpoints:', error);
     return NextResponse.json(

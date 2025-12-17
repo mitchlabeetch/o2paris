@@ -20,7 +20,12 @@ async function getPinpoints(): Promise<Pinpoint[]> {
     }
 
     const pinpoints = await sql`SELECT * FROM pinpoints ORDER BY id`;
-    return pinpoints as Pinpoint[];
+    // Normalize DECIMAL strings to numbers
+    return (pinpoints as Pinpoint[]).map(p => ({
+      ...p,
+      latitude: Number(p.latitude),
+      longitude: Number(p.longitude),
+    }));
   } catch (error) {
     console.error('Error fetching pinpoints:', error);
     return FALLBACK_PINPOINTS;
@@ -40,7 +45,13 @@ async function getMapConfig(): Promise<MapConfig> {
       return FALLBACK_MAP_CONFIG;
     }
 
-    return configs[0] as MapConfig;
+    const config = configs[0] as MapConfig;
+    // Normalize DECIMAL strings
+    return {
+      ...config,
+      center_lat: Number(config.center_lat),
+      center_lng: Number(config.center_lng),
+    };
   } catch (error) {
     console.error('Error fetching config:', error);
     // Return default config
@@ -54,18 +65,30 @@ export default async function Home() {
 
   return (
     <main className="relative">
-      <div className="absolute top-4 left-4 z-[1000] bg-white/90 backdrop-blur-sm p-4 rounded-lg shadow-lg">
-        <h1 className="text-2xl font-bold text-water-dark mb-2">O2Paris</h1>
-        <p className="text-sm text-gray-700">Carte Sonore Interactive</p>
-        <p className="text-xs text-gray-500 mt-1">Eau de Paris</p>
+      {/* Water-themed header with enhanced styling */}
+      <div className="absolute top-4 left-4 z-[1000] water-card p-5 rounded-2xl water-texture">
+        <div className="flex items-center gap-3 mb-2">
+          <span className="water-droplet text-3xl">💧</span>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-[#1565C0] to-[#0D47A1] bg-clip-text text-transparent">
+            O2Paris
+          </h1>
+        </div>
+        <p className="text-sm text-gray-700 font-medium">Carte Sonore Interactive</p>
+        <div className="flex items-center gap-2 mt-2">
+          <span className="text-lg">🌊</span>
+          <p className="text-xs text-[#1565C0] font-semibold tracking-wide uppercase">
+            Sons de l&apos;eau à Paris
+          </p>
+        </div>
       </div>
       
+      {/* Admin link with water styling */}
       <a
         href="/admin"
-        className="absolute top-4 right-4 z-[1000] bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-water-light transition-all duration-300 group"
+        className="absolute top-4 right-4 z-[1000] water-card p-3 rounded-full hover:scale-110 transition-all duration-300 group"
         title="Administration"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-water-dark group-hover:rotate-90 transition-transform duration-300">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-[#1565C0] group-hover:rotate-90 transition-transform duration-300">
           <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.107-1.204l-.527-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z" />
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
@@ -75,3 +98,4 @@ export default async function Home() {
     </main>
   );
 }
+
