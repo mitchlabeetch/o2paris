@@ -36,11 +36,57 @@ export default function AdminPage() {
   const [showTilePicker, setShowTilePicker] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Audio playback state
+  const [playingSoundId, setPlayingSoundId] = useState<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
   const showToast = (
     message: string,
     type: "success" | "error" | "info" = "info"
   ) => {
     setToast({ message, type });
+  };
+
+  // Cleanup audio when component unmounts
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  const togglePlaySound = (soundId: number) => {
+    if (playingSoundId === soundId) {
+      // Stop currently playing
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      setPlayingSoundId(null);
+    } else {
+      // Stop previous if any
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+
+      // Start new
+      const audio = new Audio(`/api/sounds?id=${soundId}`);
+      audio.onended = () => setPlayingSoundId(null);
+      audio.onerror = () => {
+        showToast("Erreur lors de la lecture du son", "error");
+        setPlayingSoundId(null);
+      };
+
+      audioRef.current = audio;
+      audio.play().catch(err => {
+        console.error("Play error:", err);
+        showToast("Impossible de lire le son", "error");
+        setPlayingSoundId(null);
+      });
+      setPlayingSoundId(soundId);
+    }
   };
 
   const loadData = useCallback(async () => {
@@ -287,13 +333,24 @@ export default function AdminPage() {
 
             {error && <div className="text-red-600 text-sm">{error}</div>}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="water-button w-full"
-            >
-              {loading ? "Connexion..." : "Se connecter"}
-            </button>
+            <div className="flex gap-2">
+              <a
+                href="/"
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center"
+                title="Retour à la carte"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
+              </a>
+              <button
+                type="submit"
+                disabled={loading}
+                className="water-button w-full"
+              >
+                {loading ? "Connexion..." : "Se connecter"}
+              </button>
+            </div>
           </form>
 
           {process.env.NODE_ENV !== "production" && (
@@ -524,18 +581,42 @@ export default function AdminPage() {
                       rows={3}
                     />
 
-                    <input
-                      type="text"
-                      placeholder="URL du son (ex: /api/sounds?id=1)"
-                      value={editingPinpoint.sound_url || ""}
-                      onChange={(e) =>
-                        setEditingPinpoint({
-                          ...editingPinpoint,
-                          sound_url: e.target.value,
-                        })
-                      }
-                      className="water-input w-full"
-                    />
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Son associé
+                      </label>
+                      <select
+                        value={
+                          editingPinpoint.sound_url?.startsWith("/api/sounds?id=")
+                            ? editingPinpoint.sound_url.split("=")[1]
+                            : ""
+                        }
+                        onChange={(e) => {
+                          const id = e.target.value;
+                          setEditingPinpoint({
+                            ...editingPinpoint,
+                            sound_url: id ? `/api/sounds?id=${id}` : "",
+                          });
+                        }}
+                        className="water-input w-full"
+                      >
+                        <option value="">Sélectionner un son...</option>
+                        {sounds.map((sound) => (
+                          <option key={sound.id} value={sound.id}>
+                            {sound.filename} (ID: {sound.id})
+                          </option>
+                        ))}
+                      </select>
+                      {editingPinpoint.sound_url &&
+                        !editingPinpoint.sound_url.startsWith(
+                          "/api/sounds?id="
+                        ) && (
+                          <p className="text-xs text-amber-600 mt-1">
+                            Attention: Ce point utilise une URL personnalisée (
+                            {editingPinpoint.sound_url})
+                          </p>
+                        )}
+                    </div>
 
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-700">
@@ -799,6 +880,25 @@ export default function AdminPage() {
                           </div>
                           <div className="flex gap-2 w-full sm:w-auto">
                             <button
+                              onClick={() => togglePlaySound(sound.id)}
+                              className={`flex-1 sm:flex-none w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+                                playingSoundId === sound.id
+                                  ? "bg-water-main text-white hover:bg-water-dark"
+                                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                              }`}
+                              title={playingSoundId === sound.id ? "Arrêter" : "Écouter"}
+                            >
+                              {playingSoundId === sound.id ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                                  <path fillRule="evenodd" d="M6.75 5.25a.75.75 0 01.75-.75H9a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H7.5a.75.75 0 01-.75-.75V5.25zm7.5 0A.75.75 0 0115 4.5h1.5a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H15a.75.75 0 01-.75-.75V5.25z" clipRule="evenodd" />
+                                </svg>
+                              ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                                  <path fillRule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clipRule="evenodd" />
+                                </svg>
+                              )}
+                            </button>
+                            <button
                               onClick={(e) => copySoundUrl(sound.id, e)}
                               className="flex-1 sm:flex-none px-3 py-1.5 text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors flex items-center justify-center gap-1"
                             >
@@ -1000,6 +1100,27 @@ export default function AdminPage() {
                       }
                       className="water-input w-full"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Thème d&apos;arrière-plan
+                    </label>
+                    <select
+                      value={config.background_theme || "water"}
+                      onChange={(e) =>
+                        setConfig({ ...config, background_theme: e.target.value })
+                      }
+                      className="water-input w-full"
+                    >
+                      <option value="water">Eau (Par défaut)</option>
+                      <option value="light">Clair</option>
+                      <option value="dark">Sombre</option>
+                      <option value="nature">Nature</option>
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Change l&apos;arrière-plan de la page d&apos;accueil (derrière la carte)
+                    </p>
                   </div>
 
                   <button onClick={handleSaveConfig} className="water-button">

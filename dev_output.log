@@ -4,6 +4,7 @@
 
   ▲ Next.js 14.2.35
   - Local:        http://localhost:3000
+  - Environments: .env
 
  ✓ Starting...
  ✓ Ready in 1755ms
@@ -14,3 +15,29 @@
  ○ Compiling /api/config ...
  ✓ Compiled /api/config in 3.7s (261 modules)
  ✓ Compiled (265 modules)
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+ ✓ Ready in 1805ms
+ ○ Compiling /admin ...
+ ✓ Compiled /admin in 5.5s (494 modules)
+ GET /admin 200 in 6253ms
+ ✓ Compiled in 742ms (248 modules)
+ ○ Compiling /api/sounds ...
+ ✓ Compiled /api/sounds in 4.1s (261 modules)
+ ✓ Compiled (265 modules)
+ GET /admin 200 in 205ms
+ GET /api/pinpoints 200 in 363ms
+ GET /api/sounds 200 in 372ms
+ GET /api/config 200 in 378ms
+ GET /api/pinpoints 200 in 135ms
+ GET /api/sounds 200 in 128ms
+ GET /api/config 200 in 128ms
+ ○ Compiling / ...
+ ✓ Compiled / in 1214ms (605 modules)
+ GET / 200 in 2048ms
+ ✓ Compiled in 730ms (585 modules)
+ ✓ Compiled in 389ms (585 modules)
+ ✓ Compiled in 3.5s (296 modules)
