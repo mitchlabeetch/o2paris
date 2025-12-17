@@ -229,7 +229,7 @@ export default function Map({ pinpoints, config }: MapProps) {
     <MapContainer
       center={[config.center_lat, config.center_lng]}
       zoom={config.zoom_level}
-      style={{ height: '100dvh', width: '100%' }}
+      style={{ height: '100%', width: '100%' }}
       maxZoom={config.max_zoom}
       minZoom={config.min_zoom}
       zoomControl={false}

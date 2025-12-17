@@ -54,17 +54,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log(`Creating pinpoint: ${title} with sound URL: ${sound_url}`);
+
     const result = await sql`
       INSERT INTO pinpoints (latitude, longitude, title, description, sound_url, icon)
       VALUES (${latitude}, ${longitude}, ${title}, ${description}, ${sound_url}, ${icon})
       RETURNING *
     `;
 
+    console.log(`Pinpoint created successfully with ID: ${result[0].id}`);
+
     return NextResponse.json(result[0], { status: 201 });
   } catch (error) {
     console.error('Error creating pinpoint:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to create pinpoint' },
+      { error: 'Failed to create pinpoint', details: errorMessage },
       { status: 500 }
     );
   }
@@ -89,6 +94,8 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    console.log(`Updating pinpoint ${id}: ${title} with sound URL: ${sound_url}`);
+
     const result = await sql`
       UPDATE pinpoints
       SET 
@@ -104,17 +111,21 @@ export async function PUT(request: NextRequest) {
     `;
 
     if (result.length === 0) {
+      console.error(`Pinpoint not found with ID: ${id}`);
       return NextResponse.json(
         { error: 'Pinpoint not found' },
         { status: 404 }
       );
     }
 
+    console.log(`Pinpoint ${id} updated successfully`);
+
     return NextResponse.json(result[0]);
   } catch (error) {
     console.error('Error updating pinpoint:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to update pinpoint' },
+      { error: 'Failed to update pinpoint', details: errorMessage },
       { status: 500 }
     );
   }

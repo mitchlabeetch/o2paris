@@ -69,13 +69,13 @@ export default async function Home() {
       {/* Water curtain loading animation */}
       <WaterCurtain />
       
-      {/* Map layer - positioned to fill entire viewport */}
-      <div className="absolute inset-0 z-0">
+      {/* Map layer with padding - positioned to fill viewport with padding */}
+      <div className="absolute inset-0 p-2.5 md:p-10 z-0">
         <Map pinpoints={pinpoints} config={config} />
       </div>
       
-      {/* Water-themed header with enhanced styling - Bottom left, max 30% width */}
-      <div className="absolute bottom-4 left-4 z-[1000] water-card p-5 rounded-2xl water-texture max-w-[30%] min-w-[200px]">
+      {/* Water-themed header with enhanced styling - Top left, max 30% width */}
+      <div className="absolute top-2.5 left-2.5 md:top-10 md:left-10 z-[1000] water-card p-5 rounded-2xl water-texture max-w-[30%] min-w-[200px]">
         <div className="flex items-center gap-3 mb-2">
           <span className="water-droplet text-3xl">💧</span>
           <h1 className="text-2xl font-bold bg-gradient-to-r from-[#1565C0] to-[#0D47A1] bg-clip-text text-transparent">
@@ -94,7 +94,7 @@ export default async function Home() {
       {/* Admin link with water styling */}
       <a
         href="/admin"
-        className="absolute top-4 right-4 z-[1000] water-card p-3 rounded-full hover:scale-110 transition-all duration-300 group"
+        className="absolute top-2.5 right-2.5 md:top-10 md:right-10 z-[1000] water-card p-3 rounded-full hover:scale-110 transition-all duration-300 group"
         title="Administration"
       >
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-[#1565C0] group-hover:rotate-90 transition-transform duration-300">
