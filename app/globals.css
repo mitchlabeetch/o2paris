@@ -413,38 +413,25 @@ body {
 
 /* Droplet animation in curtain */
 .water-curtain-droplet {
-  animation: dropletBounce 1s ease-in-out infinite alternate,
-             dropletRotate 2s linear infinite;
+  animation: dropletBounce 1.2s ease-in-out infinite alternate;
   filter: drop-shadow(0 4px 20px rgba(255, 255, 255, 0.6));
 }
 
 @keyframes dropletBounce {
   0% {
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    transform: translateY(-20px) scale(1.15);
-  }
-  100% {
-    transform: translateY(-10px) scale(1.1);
-  }
-}
-
-@keyframes dropletRotate {
-  0% {
-    transform: rotate(0deg);
+    transform: translateY(0) scale(1) rotate(0deg);
   }
   25% {
-    transform: rotate(-5deg);
+    transform: translateY(-10px) scale(1.08) rotate(-3deg);
   }
   50% {
-    transform: rotate(0deg);
+    transform: translateY(-20px) scale(1.15) rotate(0deg);
   }
   75% {
-    transform: rotate(5deg);
+    transform: translateY(-15px) scale(1.12) rotate(3deg);
   }
   100% {
-    transform: rotate(0deg);
+    transform: translateY(-10px) scale(1.1) rotate(0deg);
   }
 }
 
