@@ -55,6 +55,111 @@ export const DEFAULT_MAP_CONFIG: Omit<MapConfig, 'id' | 'updated_at'> = {
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 };
 
+// Preset tile layers with visual previews
+export const PRESET_TILE_LAYERS = [
+  {
+    id: 'osm-standard',
+    name: 'OpenStreetMap Standard',
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '© OpenStreetMap contributors',
+    preview: '🗺️',
+    description: 'Carte classique OpenStreetMap'
+  },
+  {
+    id: 'carto-light',
+    name: 'CartoDB Positron (Clair)',
+    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    attribution: '© CartoDB © OpenStreetMap contributors',
+    preview: '☀️',
+    description: 'Style moderne et épuré'
+  },
+  {
+    id: 'carto-dark',
+    name: 'CartoDB Dark Matter',
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    attribution: '© CartoDB © OpenStreetMap contributors',
+    preview: '🌙',
+    description: 'Thème sombre élégant'
+  },
+  {
+    id: 'carto-voyager',
+    name: 'CartoDB Voyager',
+    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    attribution: '© CartoDB © OpenStreetMap contributors',
+    preview: '🧭',
+    description: 'Style coloré et moderne'
+  },
+  {
+    id: 'stamen-toner',
+    name: 'Stamen Toner',
+    url: 'https://tiles.stadiamaps.com/tiles/stamen_toner/{z}/{x}/{y}{r}.png',
+    attribution: '© Stadia Maps © Stamen Design © OpenStreetMap contributors',
+    preview: '⬛',
+    description: 'Noir et blanc contrasté'
+  },
+  {
+    id: 'stamen-watercolor',
+    name: 'Stamen Watercolor',
+    url: 'https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg',
+    attribution: '© Stadia Maps © Stamen Design © OpenStreetMap contributors',
+    preview: '🎨',
+    description: 'Effet aquarelle artistique'
+  },
+  {
+    id: 'esri-world-topo',
+    name: 'Esri World Topographic',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+    attribution: '© Esri',
+    preview: '🏔️',
+    description: 'Carte topographique détaillée'
+  },
+  {
+    id: 'esri-natgeo',
+    name: 'Esri National Geographic',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}',
+    attribution: '© Esri © National Geographic',
+    preview: '🌍',
+    description: 'Style National Geographic'
+  }
+];
+
+// Water/Paris themed icons organized by category
+export const ICON_CATEGORIES = {
+  water: {
+    label: 'Eau',
+    emoji: '💧',
+    icons: ['💧', '🌊', '💦', '🚿', '🛁', '🏊', '🏊‍♂️', '🏊‍♀️', '🤿', '🪣', '🌧️', '⛈️', '☔', '🐬', '🐳', '🦈', '🐟', '🐠', '🐡', '🦐', '🦀', '🦞', '🦑', '🐙', '🌀', '❄️', '🧊', '🫧']
+  },
+  paris: {
+    label: 'Paris',
+    emoji: '🗼',
+    icons: ['🗼', '🥖', '🥐', '🧀', '🍷', '☕', '🎭', '🎨', '🏛️', '⚜️', '🚇', '🚲', '🛴', '🎪', '🏰', '🌹', '💐', '🕯️', '🎩', '👗', '💄', '🍾', '🥂', '🎀']
+  },
+  sound: {
+    label: 'Sons & Musique',
+    emoji: '🎵',
+    icons: ['🎵', '🎶', '🎧', '🔊', '📻', '🎤', '🎸', '🎹', '🎺', '🎻', '🥁', '🪘', '🎼', '📯', '🔔', '🔕', '📢', '🗣️', '👂', '🦻']
+  },
+  nature: {
+    label: 'Nature',
+    emoji: '🌿',
+    icons: ['🌳', '🌲', '🌴', '🌿', '🍃', '🌸', '🌺', '🌻', '🌼', '🪻', '🌷', '🪷', '🍀', '☘️', '🌱', '🐦', '🦆', '🦢', '🐸', '🦋']
+  },
+  places: {
+    label: 'Lieux',
+    emoji: '📍',
+    icons: ['📍', '🏠', '🏢', '🏥', '🏦', '🏨', '🏪', '🏫', '⛪', '🕌', '🕍', '⛩️', '🗽', '🎡', '🎢', '⛲', '🌉', '🗺️', '🧭', '🚏']
+  },
+  misc: {
+    label: 'Divers',
+    emoji: '⭐',
+    icons: ['⭐', '❤️', '💙', '💜', '💚', '🧡', '💛', '🤍', '🖤', '❓', '❗', '✨', '🌟', '💫', '🔮', '💎', '🏆', '🎁', '🎈', '🎉']
+  }
+};
+
+// Flat list of all icons for easy access
+export const ALL_PRESET_ICONS = Object.values(ICON_CATEGORIES).flatMap(cat => cat.icons);
+
 export const SEED_PINPOINTS: Omit<Pinpoint, 'id' | 'created_at' | 'updated_at'>[] = [
   {
     latitude: 48.8566,

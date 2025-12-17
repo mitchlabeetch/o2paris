@@ -21,22 +21,22 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Water wave animation keyframes */
+/* Water wave animation keyframes - Gentle movement */
 @keyframes wave {
   0% {
-    transform: translateX(0) translateY(0);
+    transform: translateX(0) translateY(0) scale(1);
   }
   25% {
-    transform: translateX(-5px) translateY(2px);
+    transform: translateX(-2px) translateY(1px) scale(1.02);
   }
   50% {
-    transform: translateX(0) translateY(0);
+    transform: translateX(0) translateY(0) scale(1);
   }
   75% {
-    transform: translateX(5px) translateY(-2px);
+    transform: translateX(2px) translateY(-1px) scale(1.02);
   }
   100% {
-    transform: translateX(0) translateY(0);
+    transform: translateX(0) translateY(0) scale(1);
   }
 }
 
@@ -275,7 +275,7 @@ body {
   box-shadow: 0 12px 30px rgba(33, 150, 243, 0.5),
     0 0 0 5px rgba(33, 150, 243, 0.3);
   border-color: var(--water-foam);
-  animation: wave 0.5s ease-in-out infinite;
+  animation: wave 2s ease-in-out infinite;
 }
 
 /* Map Controls adjustment */
@@ -326,4 +326,119 @@ body {
       transparent 50%
     );
   pointer-events: none;
+}
+
+/* ================================
+   Water Curtain Loading Animation
+   ================================ */
+
+/* Main overlay container */
+.water-curtain-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: linear-gradient(
+    180deg,
+    var(--water-deep) 0%,
+    var(--water-dark) 25%,
+    var(--water-main) 50%,
+    var(--water-foam) 75%,
+    var(--water-light) 100%
+  );
+  animation: waterCurtainDrop 1s ease-out forwards;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Curtain drop animation */
+@keyframes waterCurtainDrop {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+/* Wave at bottom of curtain */
+.water-curtain-wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z' fill='rgba(255,255,255,0.4)'/%3E%3C/svg%3E") repeat-x;
+  background-size: 1200px 80px;
+  animation: waveMove 0.8s linear infinite;
+}
+
+@keyframes waveMove {
+  0% {
+    background-position-x: 0;
+  }
+  100% {
+    background-position-x: 1200px;
+  }
+}
+
+/* Droplet animation in curtain */
+.water-curtain-droplet {
+  animation: dropletBounce 0.6s ease-in-out infinite alternate;
+  filter: drop-shadow(0 4px 20px rgba(255, 255, 255, 0.5));
+}
+
+@keyframes dropletBounce {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    transform: translateY(-15px) scale(1.1);
+  }
+}
+
+/* Text shadow for water effect */
+.text-shadow-water {
+  text-shadow: 0 2px 10px rgba(255, 255, 255, 0.3),
+    0 4px 20px rgba(13, 71, 161, 0.3);
+}
+
+/* Additional water bubbles animation (decorative) */
+.water-curtain-overlay::before,
+.water-curtain-overlay::after {
+  content: "💧";
+  position: absolute;
+  font-size: 24px;
+  opacity: 0.4;
+  animation: bubbleFloat 1s ease-out forwards;
+}
+
+.water-curtain-overlay::before {
+  left: 20%;
+  top: 30%;
+  animation-delay: 0.1s;
+}
+
+.water-curtain-overlay::after {
+  right: 25%;
+  top: 45%;
+  animation-delay: 0.3s;
+}
+
+@keyframes bubbleFloat {
+  0% {
+    transform: translateY(0) scale(0.5);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-50px) scale(1.2);
+    opacity: 0;
+  }
 }

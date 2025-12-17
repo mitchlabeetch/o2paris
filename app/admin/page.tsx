@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { Pinpoint, MapConfig, Sound } from "@/lib/db";
+import { PRESET_TILE_LAYERS, ICON_CATEGORIES } from "@/lib/db";
 import { getCookie } from "@/lib/client-utils";
 import Toast from "@/components/Toast";
 import Modal from "@/components/Modal";
@@ -30,6 +31,9 @@ export default function AdminPage() {
   const [deleteType, setDeleteType] = useState<"pinpoint" | "sound" | null>(
     null
   );
+  const [showIconPicker, setShowIconPicker] = useState(false);
+  const [iconCategory, setIconCategory] = useState<keyof typeof ICON_CATEGORIES>("water");
+  const [showTilePicker, setShowTilePicker] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const showToast = (
@@ -359,7 +363,7 @@ export default function AdminPage() {
               disabled={initializingDb}
               className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg transition-colors"
             >
-              {initializingDb ? "..." : "Reset DB"}
+              {initializingDb ? "..." : "Réinitialiser BDD"}
             </button>
             <a
               href="/"
@@ -533,22 +537,84 @@ export default function AdminPage() {
                       className="water-input w-full"
                     />
 
-                    <div className="space-y-1">
-                      <input
-                        type="text"
-                        placeholder="Icône personnalisée (emoji ou caractère)"
-                        value={editingPinpoint.icon || ""}
-                        onChange={(e) =>
-                          setEditingPinpoint({
-                            ...editingPinpoint,
-                            icon: e.target.value,
-                          })
-                        }
-                        className="water-input w-full"
-                      />
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Icône du point
+                      </label>
+                      <div className="flex gap-2 items-center">
+                        <div className="w-12 h-12 rounded-lg bg-water-light flex items-center justify-center text-2xl border-2 border-water-main">
+                          {editingPinpoint.icon || "💧"}
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Icône personnalisée"
+                          value={editingPinpoint.icon || ""}
+                          onChange={(e) =>
+                            setEditingPinpoint({
+                              ...editingPinpoint,
+                              icon: e.target.value,
+                            })
+                          }
+                          className="water-input flex-1"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowIconPicker(!showIconPicker)}
+                          className="px-3 py-2 bg-water-light text-water-dark rounded-lg hover:bg-water-main hover:text-white transition-colors"
+                        >
+                          {showIconPicker ? "Fermer" : "Choisir"}
+                        </button>
+                      </div>
+                      
+                      {showIconPicker && (
+                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                          {/* Category tabs */}
+                          <div className="flex gap-1 mb-3 flex-wrap">
+                            {Object.entries(ICON_CATEGORIES).map(([key, cat]) => (
+                              <button
+                                key={key}
+                                type="button"
+                                onClick={() => setIconCategory(key as keyof typeof ICON_CATEGORIES)}
+                                className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-1 ${
+                                  iconCategory === key
+                                    ? "bg-water-main text-white"
+                                    : "bg-white text-gray-600 hover:bg-gray-100"
+                                }`}
+                              >
+                                <span>{cat.emoji}</span>
+                                <span>{cat.label}</span>
+                              </button>
+                            ))}
+                          </div>
+                          
+                          {/* Icon grid */}
+                          <div className="grid grid-cols-10 gap-1 max-h-40 overflow-y-auto p-1 bg-white rounded-lg">
+                            {ICON_CATEGORIES[iconCategory].icons.map((icon, idx) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => {
+                                  setEditingPinpoint({
+                                    ...editingPinpoint,
+                                    icon: icon,
+                                  });
+                                }}
+                                className={`w-8 h-8 flex items-center justify-center text-lg rounded hover:bg-water-light transition-colors ${
+                                  editingPinpoint.icon === icon
+                                    ? "bg-water-main ring-2 ring-water-dark"
+                                    : "bg-gray-50"
+                                }`}
+                                title={icon}
+                              >
+                                {icon}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
                       <p className="text-xs text-gray-500">
-                        Exemple : 💧 🌊 🎵 — laisser vide pour utiliser l’icône
-                        par défaut.
+                        Saisissez une icône ou choisissez parmi les icônes thématiques.
                       </p>
                     </div>
 
@@ -774,10 +840,52 @@ export default function AdminPage() {
                 </h2>
 
                 <div className="space-y-4">
+                  {/* Tile Layer Picker */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      URL des tuiles de carte
-                    </label>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Style de carte
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowTilePicker(!showTilePicker)}
+                        className="text-sm text-water-dark hover:underline"
+                      >
+                        {showTilePicker ? "Masquer les styles" : "Voir tous les styles"}
+                      </button>
+                    </div>
+                    
+                    {showTilePicker && (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        {PRESET_TILE_LAYERS.map((layer) => (
+                          <button
+                            key={layer.id}
+                            type="button"
+                            onClick={() => {
+                              setConfig({
+                                ...config,
+                                tile_layer_url: layer.url,
+                                attribution: layer.attribution,
+                              });
+                            }}
+                            className={`p-3 rounded-lg border-2 transition-all text-left hover:shadow-md ${
+                              config.tile_layer_url === layer.url
+                                ? "border-water-main bg-water-light/50 shadow-md"
+                                : "border-gray-200 bg-white hover:border-water-light"
+                            }`}
+                          >
+                            <div className="text-2xl mb-2">{layer.preview}</div>
+                            <div className="font-medium text-sm text-gray-800 truncate">
+                              {layer.name}
+                            </div>
+                            <div className="text-xs text-gray-500 line-clamp-2">
+                              {layer.description}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    
                     <input
                       type="text"
                       value={config.tile_layer_url || ""}
@@ -787,6 +895,9 @@ export default function AdminPage() {
                       className="water-input w-full"
                       placeholder="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Sélectionnez un style prédéfini ou entrez une URL personnalisée
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">

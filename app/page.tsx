@@ -2,6 +2,7 @@ import dynamicImport from 'next/dynamic';
 import { FALLBACK_MAP_CONFIG, FALLBACK_PINPOINTS, hasValidDatabaseUrl, sql } from '@/lib/db';
 import type { Pinpoint, MapConfig } from '@/lib/db';
 import Loading from '@/components/Loading';
+import WaterCurtain from '@/components/WaterCurtain';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -65,8 +66,11 @@ export default async function Home() {
 
   return (
     <main className="relative">
-      {/* Water-themed header with enhanced styling */}
-      <div className="absolute top-4 left-4 z-[1000] water-card p-5 rounded-2xl water-texture">
+      {/* Water curtain loading animation */}
+      <WaterCurtain />
+      
+      {/* Water-themed header with enhanced styling - Bottom left, max 30% width */}
+      <div className="absolute bottom-4 left-4 z-[1000] water-card p-5 rounded-2xl water-texture max-w-[30%] min-w-[200px]">
         <div className="flex items-center gap-3 mb-2">
           <span className="water-droplet text-3xl">💧</span>
           <h1 className="text-2xl font-bold bg-gradient-to-r from-[#1565C0] to-[#0D47A1] bg-clip-text text-transparent">
