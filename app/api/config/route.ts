@@ -8,9 +8,14 @@ export const revalidate = 0;
 export async function GET() {
   try {
     if (!hasValidDatabaseUrl) {
-      return NextResponse.json({
-        ...DEFAULT_MAP_CONFIG,
-      });
+      return NextResponse.json(
+        { ...DEFAULT_MAP_CONFIG },
+        {
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+          },
+        }
+      );
     }
 
     const configs = await sql`SELECT * FROM map_config ORDER BY id DESC LIMIT 1`;
