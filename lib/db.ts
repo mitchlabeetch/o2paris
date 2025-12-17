@@ -42,6 +42,7 @@ export interface MapConfig {
   min_zoom: number;
   attribution: string;
   updated_at: Date;
+  background_theme?: string;
 }
 
 export interface Sound {
@@ -60,6 +61,7 @@ export const DEFAULT_MAP_CONFIG: Omit<MapConfig, 'id' | 'updated_at'> = {
   max_zoom: 18,
   min_zoom: 10,
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  background_theme: 'water',
 };
 
 // Preset tile layers with visual previews
@@ -241,9 +243,21 @@ export async function initDatabase() {
         max_zoom INTEGER DEFAULT 18,
         min_zoom INTEGER DEFAULT 10,
         attribution TEXT,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        background_theme VARCHAR(50) DEFAULT 'water'
       )
     `;
+
+    // Check if background_theme column exists, add it if not (migration)
+    const columns = await sql`
+      SELECT column_name
+      FROM information_schema.columns
+      WHERE table_name = 'map_config' AND column_name = 'background_theme'
+    `;
+
+    if (columns.length === 0) {
+      await sql`ALTER TABLE map_config ADD COLUMN background_theme VARCHAR(50) DEFAULT 'water'`;
+    }
 
     // Create sounds table for storing audio files
     await sql`
@@ -265,7 +279,7 @@ export async function initDatabase() {
     const configs = await sql`SELECT COUNT(*) as count FROM map_config`;
     if (Number(configs[0].count) === 0) {
       await sql`
-        INSERT INTO map_config (tile_layer_url, center_lat, center_lng, zoom_level, max_zoom, min_zoom, attribution)
+        INSERT INTO map_config (tile_layer_url, center_lat, center_lng, zoom_level, max_zoom, min_zoom, attribution, background_theme)
         VALUES (
           ${DEFAULT_MAP_CONFIG.tile_layer_url},
           ${DEFAULT_MAP_CONFIG.center_lat},
@@ -273,7 +287,8 @@ export async function initDatabase() {
           ${DEFAULT_MAP_CONFIG.zoom_level},
           ${DEFAULT_MAP_CONFIG.max_zoom},
           ${DEFAULT_MAP_CONFIG.min_zoom},
-          ${DEFAULT_MAP_CONFIG.attribution}
+          ${DEFAULT_MAP_CONFIG.attribution},
+          ${DEFAULT_MAP_CONFIG.background_theme}
         )
       `;
     }

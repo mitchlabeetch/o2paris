@@ -56,7 +56,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { tile_layer_url, center_lat, center_lng, zoom_level, max_zoom, min_zoom, attribution } = body;
+    const { tile_layer_url, center_lat, center_lng, zoom_level, max_zoom, min_zoom, attribution, background_theme } = body;
 
     // Get the current config ID
     const currentConfig = await sql`SELECT id FROM map_config ORDER BY id DESC LIMIT 1`;
@@ -64,8 +64,8 @@ export async function PUT(request: NextRequest) {
     if (currentConfig.length === 0) {
       // Insert new config
       const result = await sql`
-        INSERT INTO map_config (tile_layer_url, center_lat, center_lng, zoom_level, max_zoom, min_zoom, attribution)
-        VALUES (${tile_layer_url}, ${center_lat}, ${center_lng}, ${zoom_level}, ${max_zoom}, ${min_zoom}, ${attribution})
+        INSERT INTO map_config (tile_layer_url, center_lat, center_lng, zoom_level, max_zoom, min_zoom, attribution, background_theme)
+        VALUES (${tile_layer_url}, ${center_lat}, ${center_lng}, ${zoom_level}, ${max_zoom}, ${min_zoom}, ${attribution}, ${background_theme || 'water'})
         RETURNING *
       `;
       return NextResponse.json(result[0]);
@@ -82,6 +82,7 @@ export async function PUT(request: NextRequest) {
         max_zoom = ${max_zoom},
         min_zoom = ${min_zoom},
         attribution = ${attribution},
+        background_theme = ${background_theme || 'water'},
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ${currentConfig[0].id}
       RETURNING *

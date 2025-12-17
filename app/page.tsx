@@ -64,8 +64,22 @@ export default async function Home() {
   const pinpoints = await getPinpoints();
   const config = await getMapConfig();
 
+  // Determine background based on theme
+  let bgClass = "bg-water-radial"; // Default
+
+  if (config.background_theme === 'light') {
+    bgClass = "bg-gray-100";
+  } else if (config.background_theme === 'dark') {
+    bgClass = "bg-gray-900";
+  } else if (config.background_theme === 'nature') {
+    bgClass = "bg-gradient-to-br from-green-100 to-emerald-200";
+  } else {
+    // water theme
+    bgClass = "bg-gradient-to-br from-water-light via-water-main to-water-deep";
+  }
+
   return (
-    <main className="relative h-screen w-full overflow-hidden">
+    <main className={`relative h-screen w-full overflow-hidden ${bgClass}`}>
       {/* Water curtain loading animation */}
       <WaterCurtain />
       
