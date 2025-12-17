@@ -109,13 +109,18 @@ export async function POST(request: NextRequest) {
     }
 
     const buffer = await file.arrayBuffer();
-    const data = Buffer.from(buffer);
+    const dataBuffer = Buffer.from(buffer);
+
+    // Convert buffer to Postgres hex format for BYTEA
+    // This avoids the neon driver stringifying the Buffer object to JSON
+    const hexData = '\\x' + dataBuffer.toString('hex');
 
     console.log(`Uploading sound: ${file.name}, size: ${file.size}, type: ${file.type}`);
 
+    // Insert using the hex string format which Postgres treats as a BYTEA literal
     const result = await sql`
       INSERT INTO sounds (filename, data, mime_type, size)
-      VALUES (${file.name}, ${data}, ${file.type}, ${file.size})
+      VALUES (${file.name}, ${hexData}, ${file.type}, ${file.size})
       RETURNING id, filename, mime_type, size, created_at
     `;
 
