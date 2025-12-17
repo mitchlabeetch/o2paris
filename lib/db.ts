@@ -1,7 +1,4 @@
-import { neon, neonConfig } from '@neondatabase/serverless';
-
-// Configure Neon for better connection handling
-neonConfig.fetchConnectionCache = true;
+import { neon } from '@neondatabase/serverless';
 
 // Get DATABASE_URL from environment
 // Use a valid but safe placeholder for build time
