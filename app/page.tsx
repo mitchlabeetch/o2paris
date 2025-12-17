@@ -65,9 +65,14 @@ export default async function Home() {
   const config = await getMapConfig();
 
   return (
-    <main className="relative">
+    <main className="relative h-screen w-full overflow-hidden">
       {/* Water curtain loading animation */}
       <WaterCurtain />
+      
+      {/* Map layer - positioned to fill entire viewport */}
+      <div className="absolute inset-0 z-0">
+        <Map pinpoints={pinpoints} config={config} />
+      </div>
       
       {/* Water-themed header with enhanced styling - Bottom left, max 30% width */}
       <div className="absolute bottom-4 left-4 z-[1000] water-card p-5 rounded-2xl water-texture max-w-[30%] min-w-[200px]">
@@ -97,8 +102,6 @@ export default async function Home() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       </a>
-      
-      <Map pinpoints={pinpoints} config={config} />
     </main>
   );
 }

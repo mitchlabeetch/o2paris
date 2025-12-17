@@ -308,7 +308,7 @@ body {
 
 /* Subtle water texture overlay */
 .water-texture {
-  position: relative;
+  /* position removed - allows Tailwind positioning classes to work */
 }
 
 .water-texture::before {
@@ -326,6 +326,7 @@ body {
       transparent 50%
     );
   pointer-events: none;
+  z-index: 0;
 }
 
 /* ================================
