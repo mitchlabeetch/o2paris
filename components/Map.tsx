@@ -26,6 +26,19 @@ const escapeHtml = (value: string) =>
 // Custom water-themed marker icon
 const createWaterIcon = (icon?: string) => {
   const raw = (icon || '💧').trim();
+  
+  // Check if it's a custom icon reference
+  if (raw.startsWith('custom-icon-')) {
+    const iconId = raw.replace('custom-icon-', '');
+    return L.divIcon({
+      className: 'custom-marker custom-icon-marker',
+      html: `<div class="marker-content"><img src="/api/icons?id=${iconId}" alt="icon" style="width: 32px; height: 32px; object-fit: contain;" /></div>`,
+      iconSize: [40, 40],
+      iconAnchor: [20, 20],
+      popupAnchor: [0, -20],
+    });
+  }
+  
   const emojiSafePattern = /^(?:[A-Za-z0-9]|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDE4F]|\uD83E[\uDD00-\uDDFF]){1,4}$/;
   const safe = emojiSafePattern.test(raw) ? raw : '💧';
   const symbol = escapeHtml(safe);
@@ -67,9 +80,14 @@ interface AudioPlayerProps {
   soundUrl: string;
   autoPlay?: boolean;
   onEnded?: () => void;
+  onSkip?: () => void;
+  pinpointId?: number;
 }
 
-function AudioPlayer({ soundUrl, autoPlay, onEnded }: AudioPlayerProps) {
+// Global registry to track all playing audio instances
+const playingAudios: Map<number, { audio: HTMLAudioElement; stop: () => void }> = new Map();
+
+function AudioPlayer({ soundUrl, autoPlay, onEnded, onSkip, pinpointId }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -171,9 +189,20 @@ function AudioPlayer({ soundUrl, autoPlay, onEnded }: AudioPlayerProps) {
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('canplay', handleCanPlay);
+      // Remove from playing audios registry
+      if (pinpointId !== undefined) {
+        playingAudios.delete(pinpointId);
+      }
       audioRef.current = null;
     };
-  }, [applyFallback, soundUrl, onEnded]);
+  }, [applyFallback, soundUrl, onEnded, pinpointId]);
+
+  const stopAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
+  }, []);
 
   const togglePlay = useCallback(async () => {
     if (!audioRef.current) return;
@@ -181,6 +210,9 @@ function AudioPlayer({ soundUrl, autoPlay, onEnded }: AudioPlayerProps) {
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
+      if (pinpointId !== undefined) {
+        playingAudios.delete(pinpointId);
+      }
     } else {
       try {
         setIsLoading(true);
@@ -188,6 +220,10 @@ function AudioPlayer({ soundUrl, autoPlay, onEnded }: AudioPlayerProps) {
         await audioRef.current.play();
         setIsPlaying(true);
         setIsLoading(false);
+        // Register this audio as playing
+        if (pinpointId !== undefined && audioRef.current) {
+          playingAudios.set(pinpointId, { audio: audioRef.current, stop: stopAudio });
+        }
       } catch (err) {
         console.error('Error playing audio:', err);
         const recovered = await applyFallback(true);
@@ -196,7 +232,16 @@ function AudioPlayer({ soundUrl, autoPlay, onEnded }: AudioPlayerProps) {
         }
       }
     }
-  }, [isPlaying, applyFallback]);
+  }, [isPlaying, applyFallback, pinpointId, stopAudio]);
+
+  const handleSoloPlay = useCallback(() => {
+    // Stop all other playing sounds except this one
+    playingAudios.forEach((instance, id) => {
+      if (id !== pinpointId) {
+        instance.stop();
+      }
+    });
+  }, [pinpointId]);
 
   // Handle autoPlay
   useEffect(() => {
@@ -209,8 +254,12 @@ function AudioPlayer({ soundUrl, autoPlay, onEnded }: AudioPlayerProps) {
     }
   }, [autoPlay, isPlaying, isLoading, error, togglePlay]);
 
+  // Check if other sounds are playing
+  const otherSoundsPlaying = pinpointId !== undefined && 
+    Array.from(playingAudios.keys()).some(id => id !== pinpointId);
+
   return (
-    <div className="audio-controls">
+    <div className="audio-controls flex items-center gap-2">
       <button 
         onClick={togglePlay} 
         className="play-pause-btn"
@@ -219,6 +268,29 @@ function AudioPlayer({ soundUrl, autoPlay, onEnded }: AudioPlayerProps) {
       >
         {isLoading ? '⏳' : isPlaying ? '⏸' : '▶'}
       </button>
+      
+      {/* Solo button - only show when other sounds are playing */}
+      {isPlaying && otherSoundsPlaying && (
+        <button
+          onClick={handleSoloPlay}
+          className="solo-btn px-2 py-1 text-xs font-semibold bg-water-main text-white rounded hover:bg-water-dark transition-colors"
+          title="Couper les autres sons"
+        >
+          Solo
+        </button>
+      )}
+
+      {/* Skip button for tour mode */}
+      {onSkip && (
+        <button
+          onClick={onSkip}
+          className="skip-btn text-sm px-1.5 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+          title="Passer au suivant"
+        >
+          ⏭
+        </button>
+      )}
+      
       {error && (
         <div className="text-xs text-red-600 mt-1">{error}</div>
       )}
@@ -316,9 +388,9 @@ export default function Map({ pinpoints, config }: MapProps) {
         markerRefs={markerRefs}
       />
 
-      {/* Tour Control Button */}
+      {/* Tour Control Buttons */}
       <div className="leaflet-bottom leaflet-left" style={{ marginBottom: '80px', pointerEvents: 'auto' }}>
-        <div className="leaflet-control leaflet-bar">
+        <div className="leaflet-control leaflet-bar flex gap-1">
           <button
             onClick={isTourActive ? handleStopTour : handleStartTour}
             className={`w-[40px] h-[40px] flex items-center justify-center font-bold text-xl transition-all ${
@@ -339,6 +411,26 @@ export default function Map({ pinpoints, config }: MapProps) {
           >
             {isTourActive ? '⏹' : '▶️'}
           </button>
+          
+          {/* Fast-forward button - only show during active tour */}
+          {isTourActive && (
+            <button
+              onClick={handleTourNext}
+              className="w-[40px] h-[40px] flex items-center justify-center font-bold text-xl bg-white text-water-dark hover:bg-gray-100 transition-all"
+              title="Avancer rapidement (passer au suivant)"
+              style={{
+                width: '40px',
+                height: '40px',
+                lineHeight: '40px',
+                cursor: 'pointer',
+                border: 'none',
+                borderRadius: '4px',
+                boxShadow: '0 1px 5px rgba(0,0,0,0.4)'
+              }}
+            >
+              ⏩
+            </button>
+          )}
         </div>
       </div>
 
@@ -355,7 +447,17 @@ export default function Map({ pinpoints, config }: MapProps) {
           <Popup className="custom-popup">
             <div className="p-1 min-w-[200px]">
               <div className="flex items-center gap-2 mb-2 border-b border-gray-100 pb-2">
-                <span className="text-2xl">{pinpoint.icon || '💧'}</span>
+                <span className="text-2xl flex items-center justify-center w-8 h-8">
+                  {pinpoint.icon?.startsWith('custom-icon-') ? (
+                    <img 
+                      src={`/api/icons?id=${pinpoint.icon.replace('custom-icon-', '')}`}
+                      alt="icon"
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    pinpoint.icon || '💧'
+                  )}
+                </span>
                 <h3 className="font-bold text-water-dark text-lg leading-tight">
                   {pinpoint.title}
                 </h3>
@@ -368,6 +470,8 @@ export default function Map({ pinpoints, config }: MapProps) {
                   soundUrl={pinpoint.sound_url}
                   autoPlay={isTourActive && tourIndex === idx}
                   onEnded={isTourActive ? handleTourNext : undefined}
+                  onSkip={isTourActive && tourIndex === idx ? handleTourNext : undefined}
+                  pinpointId={pinpoint.id}
                 />
               </div>
             </div>

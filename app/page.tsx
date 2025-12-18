@@ -65,21 +65,46 @@ export default async function Home() {
   const config = await getMapConfig();
 
   // Determine background based on theme
-  let bgClass = "bg-water-radial"; // Default
+  let bgClass = "bg-gradient-to-br from-water-light via-water-main to-water-deep"; // Default
+  let bgStyle: React.CSSProperties = {};
 
-  if (config.background_theme === 'light') {
-    bgClass = "bg-gray-100";
-  } else if (config.background_theme === 'dark') {
-    bgClass = "bg-gray-900";
-  } else if (config.background_theme === 'nature') {
-    bgClass = "bg-gradient-to-br from-green-100 to-emerald-200";
+  // Map background themes to CSS classes
+  const themeMap: { [key: string]: string } = {
+    water: 'bg-gradient-to-br from-water-light via-water-main to-water-deep',
+    light: 'bg-gray-100',
+    dark: 'bg-gray-900',
+    nature: 'bg-gradient-to-br from-green-100 to-emerald-200',
+    sky: 'bg-gradient-to-br from-blue-100 via-sky-200 to-blue-300',
+    sunset: 'bg-gradient-to-br from-orange-200 via-pink-300 to-purple-400',
+    ocean: 'bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600',
+    forest: 'bg-gradient-to-br from-green-600 via-emerald-700 to-green-900',
+    lavender: 'bg-gradient-to-br from-purple-200 via-violet-300 to-purple-400',
+    autumn: 'bg-gradient-to-br from-amber-300 via-orange-400 to-red-500',
+    arctic: 'bg-gradient-to-br from-blue-50 via-cyan-100 to-blue-200',
+    desert: 'bg-gradient-to-br from-yellow-200 via-amber-300 to-orange-400',
+    midnight: 'bg-gradient-to-br from-indigo-900 via-purple-900 to-black',
+    rose: 'bg-gradient-to-br from-pink-200 via-rose-300 to-pink-400',
+    mint: 'bg-gradient-to-br from-green-100 via-teal-200 to-cyan-300',
+  };
+
+  const theme = config.background_theme || 'water';
+  
+  // Check if it's a custom background
+  if (theme.startsWith('custom-')) {
+    const bgId = theme.replace('custom-', '');
+    bgStyle = {
+      backgroundImage: `url(/api/backgrounds?id=${bgId})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+    };
+    bgClass = ''; // No class needed for custom backgrounds
   } else {
-    // water theme
-    bgClass = "bg-gradient-to-br from-water-light via-water-main to-water-deep";
+    bgClass = themeMap[theme] || themeMap.water;
   }
 
   return (
-    <main className={`relative h-screen w-full overflow-hidden ${bgClass}`}>
+    <main className={`relative h-screen w-full overflow-hidden ${bgClass}`} style={bgStyle}>
       {/* Water curtain loading animation */}
       <WaterCurtain />
       

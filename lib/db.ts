@@ -53,6 +53,24 @@ export interface Sound {
   created_at: Date;
 }
 
+export interface CustomIcon {
+  id: number;
+  filename: string;
+  data: Buffer | Uint8Array;
+  mime_type: string;
+  size: number;
+  created_at: Date;
+}
+
+export interface CustomBackground {
+  id: number;
+  filename: string;
+  data: Buffer | Uint8Array;
+  mime_type: string;
+  size: number;
+  created_at: Date;
+}
+
 export const DEFAULT_MAP_CONFIG: Omit<MapConfig, 'id' | 'updated_at'> = {
   tile_layer_url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
   center_lat: 48.8566,
@@ -63,6 +81,25 @@ export const DEFAULT_MAP_CONFIG: Omit<MapConfig, 'id' | 'updated_at'> = {
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   background_theme: 'water',
 };
+
+// Background theme presets with visual previews
+export const BACKGROUND_PRESETS = [
+  { id: 'water', name: 'Eau', preview: '💧', cssClass: 'bg-gradient-to-br from-water-light via-water-main to-water-deep' },
+  { id: 'light', name: 'Clair', preview: '☀️', cssClass: 'bg-gray-100' },
+  { id: 'dark', name: 'Sombre', preview: '🌙', cssClass: 'bg-gray-900' },
+  { id: 'nature', name: 'Nature', preview: '🌿', cssClass: 'bg-gradient-to-br from-green-100 to-emerald-200' },
+  { id: 'sky', name: 'Ciel', preview: '☁️', cssClass: 'bg-gradient-to-br from-blue-100 via-sky-200 to-blue-300' },
+  { id: 'sunset', name: 'Coucher de soleil', preview: '🌅', cssClass: 'bg-gradient-to-br from-orange-200 via-pink-300 to-purple-400' },
+  { id: 'ocean', name: 'Océan', preview: '🌊', cssClass: 'bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600' },
+  { id: 'forest', name: 'Forêt', preview: '🌲', cssClass: 'bg-gradient-to-br from-green-600 via-emerald-700 to-green-900' },
+  { id: 'lavender', name: 'Lavande', preview: '🪻', cssClass: 'bg-gradient-to-br from-purple-200 via-violet-300 to-purple-400' },
+  { id: 'autumn', name: 'Automne', preview: '🍂', cssClass: 'bg-gradient-to-br from-amber-300 via-orange-400 to-red-500' },
+  { id: 'arctic', name: 'Arctique', preview: '❄️', cssClass: 'bg-gradient-to-br from-blue-50 via-cyan-100 to-blue-200' },
+  { id: 'desert', name: 'Désert', preview: '🏜️', cssClass: 'bg-gradient-to-br from-yellow-200 via-amber-300 to-orange-400' },
+  { id: 'midnight', name: 'Minuit', preview: '🌌', cssClass: 'bg-gradient-to-br from-indigo-900 via-purple-900 to-black' },
+  { id: 'rose', name: 'Rose', preview: '🌹', cssClass: 'bg-gradient-to-br from-pink-200 via-rose-300 to-pink-400' },
+  { id: 'mint', name: 'Menthe', preview: '🍃', cssClass: 'bg-gradient-to-br from-green-100 via-teal-200 to-cyan-300' },
+];
 
 // Preset tile layers with visual previews
 export const PRESET_TILE_LAYERS = [
@@ -196,37 +233,72 @@ export const PRESET_TILE_LAYERS = [
   }
 ];
 
-// Water/Paris themed icons organized by category
+// Water/Paris themed icons organized by category - Expanded to 200+ icons
 export const ICON_CATEGORIES = {
   water: {
     label: 'Eau',
     emoji: '💧',
-    icons: ['💧', '🌊', '💦', '🚿', '🛁', '🏊', '🏊‍♂️', '🏊‍♀️', '🤿', '🪣', '🌧️', '⛈️', '☔', '🐬', '🐳', '🦈', '🐟', '🐠', '🐡', '🦐', '🦀', '🦞', '🦑', '🐙', '🌀', '❄️', '🧊', '🫧']
+    icons: ['💧', '🌊', '💦', '🚿', '🛁', '🏊', '🏊‍♂️', '🏊‍♀️', '🤿', '🪣', '🌧️', '⛈️', '☔', '🐬', '🐳', '🦈', '🐟', '🐠', '🐡', '🦐', '🦀', '🦞', '🦑', '🐙', '🌀', '❄️', '🧊', '🫧', '🌂', '⛱️', '🏖️', '🏝️', '⛵', '🚤', '🛥️', '⛴️', '🛳️', '🌊']
   },
   paris: {
     label: 'Paris',
     emoji: '🗼',
-    icons: ['🗼', '🥖', '🥐', '🧀', '🍷', '☕', '🎭', '🎨', '🏛️', '⚜️', '🚇', '🚲', '🛴', '🎪', '🏰', '🌹', '💐', '🕯️', '🎩', '👗', '💄', '🍾', '🥂', '🎀']
+    icons: ['🗼', '🥖', '🥐', '🧀', '🍷', '☕', '🎭', '🎨', '🏛️', '⚜️', '🚇', '🚲', '🛴', '🎪', '🏰', '🌹', '💐', '🕯️', '🎩', '👗', '💄', '🍾', '🥂', '🎀', '🇫🇷', '🥗', '🍽️', '🎬', '🖼️', '🗿', '🎟️']
   },
   sound: {
     label: 'Sons & Musique',
     emoji: '🎵',
-    icons: ['🎵', '🎶', '🎧', '🔊', '📻', '🎤', '🎸', '🎹', '🎺', '🎻', '🥁', '🪘', '🎼', '📯', '🔔', '🔕', '📢', '🗣️', '👂', '🦻']
+    icons: ['🎵', '🎶', '🎧', '🔊', '📻', '🎤', '🎸', '🎹', '🎺', '🎻', '🥁', '🪘', '🎼', '📯', '🔔', '🔕', '📢', '🗣️', '👂', '🦻', '🎷', '🪗', '🎬', '📀', '💿', '📼', '🔉', '🔈', '📣', '🎙️']
   },
   nature: {
     label: 'Nature',
     emoji: '🌿',
-    icons: ['🌳', '🌲', '🌴', '🌿', '🍃', '🌸', '🌺', '🌻', '🌼', '🪻', '🌷', '🪷', '🍀', '☘️', '🌱', '🐦', '🦆', '🦢', '🐸', '🦋']
+    icons: ['🌳', '🌲', '🌴', '🌿', '🍃', '🌸', '🌺', '🌻', '🌼', '🪻', '🌷', '🪷', '🍀', '☘️', '🌱', '🐦', '🦆', '🦢', '🐸', '🦋', '🌾', '🌵', '🪴', '🏵️', '🥀', '💮', '🐛', '🐝', '🪲', '🐞', '🦗', '🕷️', '🦟', '🐌', '🦎', '🐢', '🐍', '🦕', '🦖', '🐾', '🌏', '🌎', '🌍']
   },
   places: {
     label: 'Lieux',
     emoji: '📍',
-    icons: ['📍', '🏠', '🏢', '🏥', '🏦', '🏨', '🏪', '🏫', '⛪', '🕌', '🕍', '⛩️', '🗽', '🎡', '🎢', '⛲', '🌉', '🗺️', '🧭', '🚏']
+    icons: ['📍', '🏠', '🏢', '🏥', '🏦', '🏨', '🏪', '🏫', '⛪', '🕌', '🕍', '⛩️', '🗽', '🎡', '🎢', '⛲', '🌉', '🗺️', '🧭', '🚏', '🏛️', '🏩', '🏬', '🏭', '🏗️', '🏚️', '🏘️', '🏟️', '🎠', '🎭', '🎪', '🗼', '🗻', '🏔️', '⛰️', '🌋', '🏕️', '⛺', '🛤️', '🛣️', '🗾']
+  },
+  transport: {
+    label: 'Transport',
+    emoji: '🚗',
+    icons: ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🛻', '🚚', '🚛', '🚜', '🛵', '🏍️', '🛺', '🚲', '🛴', '🚏', '🚇', '🚊', '🚝', '🚞', '🚋', '🚃', '🚟', '🚠', '🚡', '🛶', '⛵', '🚤', '🛥️', '⛴️', '🛳️', '✈️', '🛩️', '🛫', '🛬', '🚁', '🚀', '🛸']
+  },
+  food: {
+    label: 'Nourriture',
+    emoji: '🍔',
+    icons: ['🍔', '🍕', '🌭', '🥪', '🌮', '🌯', '🥙', '🍝', '🥘', '🍲', '🍜', '🍛', '🍱', '🍣', '🍤', '🥟', '🦪', '🍨', '🍧', '🍦', '🥧', '🧁', '🍰', '🎂', '🍮', '🍩', '🍪', '🍿', '🥐', '🥖', '🍞', '🥯', '🧀', '🥚', '🍳', '🥓', '🥞', '🧇', '☕', '🍵', '🧃', '🥤', '🧋', '🍷', '🍾']
+  },
+  animals: {
+    label: 'Animaux',
+    emoji: '🐶',
+    icons: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🐤', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋', '🐌', '🐞', '🐜', '🦟', '🐢', '🐍', '🦎', '🦖', '🦕', '🐙', '🦑', '🦐', '🦀', '🐡', '🐠', '🐟', '🐬', '🐳', '🐋', '🦈']
+  },
+  people: {
+    label: 'Personnes',
+    emoji: '👤',
+    icons: ['👤', '👥', '🧑', '👨', '👩', '🧒', '👶', '👴', '👵', '🧓', '👨‍🎓', '👩‍🎓', '👨‍🏫', '👩‍🏫', '👨‍⚕️', '👩‍⚕️', '👨‍🌾', '👩‍🌾', '👨‍🍳', '👩‍🍳', '👨‍🎨', '👩‍🎨', '👨‍🎤', '👩‍🎤', '👨‍💼', '👩‍💼', '🧑‍💻', '👨‍🔬', '👩‍🔬', '👨‍✈️', '👩‍✈️', '👮', '🕵️', '💂', '👷', '🤴', '👸', '👳', '👲', '🧕', '🤵', '👰', '🤰', '👼']
+  },
+  activities: {
+    label: 'Activités',
+    emoji: '⚽',
+    icons: ['⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🪀', '🏓', '🏸', '🏒', '🏑', '🥍', '🏏', '🪃', '🥅', '⛳', '🪁', '🏹', '🎣', '🤿', '🥊', '🥋', '🎽', '🛹', '🛼', '⛸️', '🥌', '🎿', '⛷️', '🏂', '🪂', '🏋️', '🤸', '🤺', '🤾', '🏇', '🧘', '🏄', '🏊', '🤽', '🚣', '🧗', '🚴', '🚵', '🤹']
+  },
+  objects: {
+    label: 'Objets',
+    emoji: '📱',
+    icons: ['📱', '💻', '⌨️', '🖥️', '🖨️', '🖱️', '🖲️', '🕹️', '💾', '💿', '📀', '📷', '📹', '🎥', '📞', '☎️', '📟', '📠', '📺', '📻', '🎙️', '🎚️', '🎛️', '🧭', '⏱️', '⏰', '🕰️', '⌛', '⏳', '📡', '🔋', '🔌', '💡', '🔦', '🕯️', '🪔', '🧯', '🛢️', '💸', '💵', '💴', '💶', '💷', '🪙', '💰', '💳']
+  },
+  symbols: {
+    label: 'Symboles',
+    emoji: '⭐',
+    icons: ['⭐', '🌟', '✨', '💫', '⚡', '🔥', '💥', '☀️', '🌤️', '⛅', '🌥️', '☁️', '🌦️', '🌧️', '⛈️', '🌩️', '🌨️', '❄️', '☃️', '⛄', '🌬️', '💨', '🌪️', '🌈', '☔', '💧', '💦', '🌊', '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝']
   },
   misc: {
     label: 'Divers',
-    emoji: '⭐',
-    icons: ['⭐', '❤️', '💙', '💜', '💚', '🧡', '💛', '🤍', '🖤', '❓', '❗', '✨', '🌟', '💫', '🔮', '💎', '🏆', '🎁', '🎈', '🎉']
+    emoji: '🎯',
+    icons: ['🎯', '🎲', '🎰', '🎳', '🧩', '🧸', '🪅', '🪆', '🎨', '🎬', '🎭', '🎪', '🎤', '🎧', '🎼', '🎹', '🥁', '🎷', '🎺', '🎸', '🎻', '🎲', '♟️', '🎮', '🕹️', '🎰', '🧿', '🎁', '🎀', '🎈', '🎉', '🎊', '🎏', '🎐', '🎑', '🧧', '🎆', '🎇', '✨', '🎃', '🎄', '🎋', '🎍', '🎎', '🎖️', '🏅', '🏆', '🥇', '🥈', '🥉']
   }
 };
 
@@ -335,9 +407,35 @@ export async function initDatabase() {
       )
     `;
 
+    // Create custom_icons table for user-uploaded icons
+    await sql`
+      CREATE TABLE IF NOT EXISTS custom_icons (
+        id SERIAL PRIMARY KEY,
+        filename VARCHAR(255) NOT NULL,
+        data BYTEA NOT NULL,
+        mime_type VARCHAR(100) NOT NULL,
+        size INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    // Create custom_backgrounds table for user-uploaded backgrounds
+    await sql`
+      CREATE TABLE IF NOT EXISTS custom_backgrounds (
+        id SERIAL PRIMARY KEY,
+        filename VARCHAR(255) NOT NULL,
+        data BYTEA NOT NULL,
+        mime_type VARCHAR(100) NOT NULL,
+        size INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
     // Helpful indexes for location & chronology
     await sql`CREATE INDEX IF NOT EXISTS idx_pinpoints_location ON pinpoints(latitude, longitude)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_sounds_created ON sounds(created_at)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_custom_icons_created ON custom_icons(created_at)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_custom_backgrounds_created ON custom_backgrounds(created_at)`;
 
     // Insert default map config if not exists
     const configs = await sql`SELECT COUNT(*) as count FROM map_config`;
