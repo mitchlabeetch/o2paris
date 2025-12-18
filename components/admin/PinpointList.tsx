@@ -325,7 +325,9 @@ export default function PinpointList({ pinpoints, sounds, onSave, onDelete }: Pi
                         )
                         .flatMap(([_, cat]) => cat.icons);
                       
-                      iconsToShow = [...new Set([...matchingCategoryIcons])];
+                      // Remove duplicates
+                      const uniqueIcons = Array.from(new Set(matchingCategoryIcons));
+                      iconsToShow = uniqueIcons;
                     }
 
                     return iconsToShow.length > 0 ? (

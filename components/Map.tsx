@@ -85,7 +85,7 @@ interface AudioPlayerProps {
 }
 
 // Global registry to track all playing audio instances
-const playingAudios: Map<number, { audio: HTMLAudioElement; stop: () => void }> = new Map();
+const playingAudios: { [key: number]: { audio: HTMLAudioElement; stop: () => void } } = {};
 
 function AudioPlayer({ soundUrl, autoPlay, onEnded, onSkip, pinpointId }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -191,7 +191,7 @@ function AudioPlayer({ soundUrl, autoPlay, onEnded, onSkip, pinpointId }: AudioP
       audio.removeEventListener('canplay', handleCanPlay);
       // Remove from playing audios registry
       if (pinpointId !== undefined) {
-        playingAudios.delete(pinpointId);
+        delete playingAudios[pinpointId];
       }
       audioRef.current = null;
     };
@@ -211,7 +211,7 @@ function AudioPlayer({ soundUrl, autoPlay, onEnded, onSkip, pinpointId }: AudioP
       audioRef.current.pause();
       setIsPlaying(false);
       if (pinpointId !== undefined) {
-        playingAudios.delete(pinpointId);
+        delete playingAudios[pinpointId];
       }
     } else {
       try {
@@ -222,7 +222,7 @@ function AudioPlayer({ soundUrl, autoPlay, onEnded, onSkip, pinpointId }: AudioP
         setIsLoading(false);
         // Register this audio as playing
         if (pinpointId !== undefined && audioRef.current) {
-          playingAudios.set(pinpointId, { audio: audioRef.current, stop: stopAudio });
+          playingAudios[pinpointId] = { audio: audioRef.current, stop: stopAudio };
         }
       } catch (err) {
         console.error('Error playing audio:', err);
@@ -236,9 +236,10 @@ function AudioPlayer({ soundUrl, autoPlay, onEnded, onSkip, pinpointId }: AudioP
 
   const handleSoloPlay = useCallback(() => {
     // Stop all other playing sounds except this one
-    playingAudios.forEach((instance, id) => {
+    Object.keys(playingAudios).forEach((idStr) => {
+      const id = parseInt(idStr);
       if (id !== pinpointId) {
-        instance.stop();
+        playingAudios[id].stop();
       }
     });
   }, [pinpointId]);
@@ -256,7 +257,7 @@ function AudioPlayer({ soundUrl, autoPlay, onEnded, onSkip, pinpointId }: AudioP
 
   // Check if other sounds are playing
   const otherSoundsPlaying = pinpointId !== undefined && 
-    Array.from(playingAudios.keys()).some(id => id !== pinpointId);
+    Object.keys(playingAudios).some(idStr => parseInt(idStr) !== pinpointId);
 
   return (
     <div className="audio-controls flex items-center gap-2">
