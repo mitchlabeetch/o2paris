@@ -2,14 +2,16 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { Pinpoint, MapConfig, Sound } from "@/lib/db";
-import { PRESET_TILE_LAYERS, ICON_CATEGORIES } from "@/lib/db";
 import { getCookie } from "@/lib/client-utils";
 import Toast from "@/components/Toast";
 import Modal from "@/components/Modal";
+import LoginForm from "@/components/admin/LoginForm";
+import PinpointList from "@/components/admin/PinpointList";
+import SoundList from "@/components/admin/SoundList";
+import ConfigForm from "@/components/admin/ConfigForm";
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState<{
@@ -24,69 +26,17 @@ export default function AdminPage() {
     "pinpoints"
   );
 
-  const [editingPinpoint, setEditingPinpoint] =
-    useState<Partial<Pinpoint> | null>(null);
   const [initializingDb, setInitializingDb] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [deleteType, setDeleteType] = useState<"pinpoint" | "sound" | null>(
     null
   );
-  const [showIconPicker, setShowIconPicker] = useState(false);
-  const [iconCategory, setIconCategory] = useState<keyof typeof ICON_CATEGORIES>("water");
-  const [showTilePicker, setShowTilePicker] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Audio playback state
-  const [playingSoundId, setPlayingSoundId] = useState<number | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const showToast = (
     message: string,
     type: "success" | "error" | "info" = "info"
   ) => {
     setToast({ message, type });
-  };
-
-  // Cleanup audio when component unmounts
-  useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
-  }, []);
-
-  const togglePlaySound = (soundId: number) => {
-    if (playingSoundId === soundId) {
-      // Stop currently playing
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-      setPlayingSoundId(null);
-    } else {
-      // Stop previous if any
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-
-      // Start new
-      const audio = new Audio(`/api/sounds?id=${soundId}`);
-      audio.onended = () => setPlayingSoundId(null);
-      audio.onerror = () => {
-        showToast("Erreur lors de la lecture du son", "error");
-        setPlayingSoundId(null);
-      };
-
-      audioRef.current = audio;
-      audio.play().catch(err => {
-        console.error("Play error:", err);
-        showToast("Impossible de lire le son", "error");
-        setPlayingSoundId(null);
-      });
-      setPlayingSoundId(soundId);
-    }
   };
 
   const loadData = useCallback(async () => {
@@ -131,8 +81,7 @@ export default function AdminPage() {
     checkAuth();
   }, [loadData]);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async (password: string) => {
     setLoading(true);
     setError("");
 
@@ -145,7 +94,6 @@ export default function AdminPage() {
 
       if (response.ok) {
         setIsAuthenticated(true);
-        setPassword("");
         loadData();
       } else {
         setError("Mot de passe incorrect");
@@ -162,20 +110,17 @@ export default function AdminPage() {
     setIsAuthenticated(false);
   };
 
-  const handleSavePinpoint = async () => {
-    if (!editingPinpoint) return;
-
+  const handleSavePinpoint = async (pinpoint: Partial<Pinpoint>) => {
     try {
-      const method = editingPinpoint.id ? "PUT" : "POST";
+      const method = pinpoint.id ? "PUT" : "POST";
       const response = await fetch("/api/pinpoints", {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editingPinpoint),
+        body: JSON.stringify(pinpoint),
       });
 
       if (response.ok) {
         await loadData();
-        setEditingPinpoint(null);
         showToast("Point sauvegardé.", "success");
       } else {
         const data = await response.json();
@@ -221,13 +166,9 @@ export default function AdminPage() {
     }
   };
 
-  const handleUploadSound = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const handleUploadSound = async (file: File) => {
     if (file.size > 4.5 * 1024 * 1024) {
       showToast("Erreur : Le fichier dépasse 4.5MB.", "error");
-      if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
@@ -251,17 +192,15 @@ export default function AdminPage() {
     } catch (err) {
       console.error("Error uploading sound:", err);
       showToast("Erreur lors du téléversement du son.", "error");
-    } finally {
-      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
-  const handleSaveConfig = async () => {
+  const handleSaveConfig = async (newConfig: Partial<MapConfig>) => {
     try {
       const response = await fetch("/api/config", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(config),
+        body: JSON.stringify(newConfig),
       });
 
       if (response.ok) {
@@ -319,58 +258,7 @@ export default function AdminPage() {
   };
 
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-water-light to-water-dark flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
-          <h1 className="text-3xl font-bold text-water-dark mb-6 text-center">
-            Administration O2Paris
-          </h1>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Mot de passe
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="water-input w-full"
-                placeholder="Entrez votre mot de passe"
-                disabled={loading}
-              />
-            </div>
-
-            {error && <div className="text-red-600 text-sm">{error}</div>}
-
-            <div className="flex gap-2">
-              <a
-                href="/"
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center"
-                title="Retour à la carte"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                </svg>
-              </a>
-              <button
-                type="submit"
-                disabled={loading}
-                className="water-button w-full"
-              >
-                {loading ? "Connexion..." : "Se connecter"}
-              </button>
-            </div>
-          </form>
-
-          {process.env.NODE_ENV !== "production" && (
-            <div className="mt-6 text-xs text-gray-500 text-center">
-              Développement - Mot de passe par défaut: Admin123
-            </div>
-          )}
-        </div>
-      </div>
-    );
+    return <LoginForm onLogin={handleLogin} loading={loading} error={error} />;
   }
 
   return (
@@ -508,641 +396,28 @@ export default function AdminPage() {
 
           <div className="p-6">
             {activeTab === "pinpoints" && (
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-bold text-gray-800">
-                    Gérer les points
-                  </h2>
-                  <button
-                    onClick={() =>
-                      setEditingPinpoint({
-                        latitude: 48.8566,
-                        longitude: 2.3522,
-                        title: "",
-                        description: "",
-                        sound_url: "",
-                        icon: "💧",
-                      })
-                    }
-                    className="water-button"
-                  >
-                    + Nouveau point
-                  </button>
-                </div>
-
-                {editingPinpoint && (
-                  <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-                    <h3 className="font-bold text-gray-800">
-                      {editingPinpoint.id ? "Modifier" : "Nouveau"} point
-                    </h3>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <input
-                        type="number"
-                        step="0.000001"
-                        placeholder="Latitude"
-                        value={editingPinpoint.latitude || ""}
-                        onChange={(e) =>
-                          setEditingPinpoint({
-                            ...editingPinpoint,
-                            latitude: parseFloat(e.target.value),
-                          })
-                        }
-                        className="water-input"
-                      />
-                      <input
-                        type="number"
-                        step="0.000001"
-                        placeholder="Longitude"
-                        value={editingPinpoint.longitude || ""}
-                        onChange={(e) =>
-                          setEditingPinpoint({
-                            ...editingPinpoint,
-                            longitude: parseFloat(e.target.value),
-                          })
-                        }
-                        className="water-input"
-                      />
-                    </div>
-
-                    <input
-                      type="text"
-                      placeholder="Titre"
-                      value={editingPinpoint.title || ""}
-                      onChange={(e) =>
-                        setEditingPinpoint({
-                          ...editingPinpoint,
-                          title: e.target.value,
-                        })
-                      }
-                      className="water-input w-full"
-                    />
-
-                    <textarea
-                      placeholder="Description"
-                      value={editingPinpoint.description || ""}
-                      onChange={(e) =>
-                        setEditingPinpoint({
-                          ...editingPinpoint,
-                          description: e.target.value,
-                        })
-                      }
-                      className="water-input w-full"
-                      rows={3}
-                    />
-
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Son associé
-                      </label>
-                      <select
-                        value={
-                          editingPinpoint.sound_url?.startsWith("/api/sounds?id=")
-                            ? editingPinpoint.sound_url.split("=")[1]
-                            : ""
-                        }
-                        onChange={(e) => {
-                          const id = e.target.value;
-                          setEditingPinpoint({
-                            ...editingPinpoint,
-                            sound_url: id ? `/api/sounds?id=${id}` : "",
-                          });
-                        }}
-                        className="water-input w-full"
-                      >
-                        <option value="">Sélectionner un son...</option>
-                        {sounds.map((sound) => (
-                          <option key={sound.id} value={sound.id}>
-                            {sound.filename} (ID: {sound.id})
-                          </option>
-                        ))}
-                      </select>
-                      {editingPinpoint.sound_url &&
-                        !editingPinpoint.sound_url.startsWith(
-                          "/api/sounds?id="
-                        ) && (
-                          <p className="text-xs text-amber-600 mt-1">
-                            Attention: Ce point utilise une URL personnalisée (
-                            {editingPinpoint.sound_url})
-                          </p>
-                        )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Icône du point
-                      </label>
-                      <div className="flex gap-2 items-center">
-                        <div className="w-12 h-12 rounded-lg bg-water-light flex items-center justify-center text-2xl border-2 border-water-main">
-                          {editingPinpoint.icon || "💧"}
-                        </div>
-                        <input
-                          type="text"
-                          placeholder="Icône personnalisée"
-                          value={editingPinpoint.icon || ""}
-                          onChange={(e) =>
-                            setEditingPinpoint({
-                              ...editingPinpoint,
-                              icon: e.target.value,
-                            })
-                          }
-                          className="water-input flex-1"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowIconPicker(!showIconPicker)}
-                          className="px-3 py-2 bg-water-light text-water-dark rounded-lg hover:bg-water-main hover:text-white transition-colors"
-                        >
-                          {showIconPicker ? "Fermer" : "Choisir"}
-                        </button>
-                      </div>
-                      
-                      {showIconPicker && (
-                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                          {/* Category tabs */}
-                          <div className="flex gap-1 mb-3 flex-wrap">
-                            {Object.entries(ICON_CATEGORIES).map(([key, cat]) => (
-                              <button
-                                key={key}
-                                type="button"
-                                onClick={() => setIconCategory(key as keyof typeof ICON_CATEGORIES)}
-                                className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-1 ${
-                                  iconCategory === key
-                                    ? "bg-water-main text-white"
-                                    : "bg-white text-gray-600 hover:bg-gray-100"
-                                }`}
-                              >
-                                <span>{cat.emoji}</span>
-                                <span>{cat.label}</span>
-                              </button>
-                            ))}
-                          </div>
-                          
-                          {/* Icon grid */}
-                          <div className="grid grid-cols-10 gap-1 max-h-40 overflow-y-auto p-1 bg-white rounded-lg">
-                            {ICON_CATEGORIES[iconCategory].icons.map((icon, idx) => (
-                              <button
-                                key={idx}
-                                type="button"
-                                onClick={() => {
-                                  setEditingPinpoint({
-                                    ...editingPinpoint,
-                                    icon: icon,
-                                  });
-                                }}
-                                className={`w-8 h-8 flex items-center justify-center text-lg rounded hover:bg-water-light transition-colors ${
-                                  editingPinpoint.icon === icon
-                                    ? "bg-water-main ring-2 ring-water-dark"
-                                    : "bg-gray-50"
-                                }`}
-                                title={icon}
-                              >
-                                {icon}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      
-                      <p className="text-xs text-gray-500">
-                        Saisissez une icône ou choisissez parmi les icônes thématiques.
-                      </p>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleSavePinpoint}
-                        className="water-button"
-                      >
-                        Sauvegarder
-                      </button>
-                      <button
-                        onClick={() => setEditingPinpoint(null)}
-                        className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
-                      >
-                        Annuler
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-3">
-                  {pinpoints.length === 0 ? (
-                    <div className="text-center py-10 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-                      <div className="text-4xl mb-2">🗺️</div>
-                      <p className="text-gray-500">Aucun point sur la carte.</p>
-                      <button
-                        onClick={() =>
-                          setEditingPinpoint({
-                            latitude: 48.8566,
-                            longitude: 2.3522,
-                            title: "",
-                            description: "",
-                            sound_url: "",
-                            icon: "💧",
-                          })
-                        }
-                        className="mt-4 text-water-dark font-medium hover:underline"
-                      >
-                        Créer le premier point
-                      </button>
-                    </div>
-                  ) : (
-                    pinpoints.map((pinpoint) => (
-                      <div
-                        key={pinpoint.id}
-                        className="group bg-white border border-gray-200 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all hover:shadow-md hover:border-water-light"
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 rounded-full bg-water-light flex items-center justify-center text-xl flex-shrink-0">
-                            {pinpoint.icon || "💧"}
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-gray-800">
-                              {pinpoint.title}
-                            </h4>
-                            <p className="text-sm text-gray-600 line-clamp-1">
-                              {pinpoint.description}
-                            </p>
-                            <p className="text-xs text-gray-400 mt-1 font-mono">
-                              {Number(pinpoint.latitude).toFixed(4)},{" "}
-                              {Number(pinpoint.longitude).toFixed(4)}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-                          <button
-                            onClick={() => setEditingPinpoint(pinpoint)}
-                            className="flex-1 sm:flex-none px-3 py-1.5 text-sm font-medium text-water-dark bg-water-light/30 rounded-lg hover:bg-water-light transition-colors"
-                          >
-                            Modifier
-                          </button>
-                          <button
-                            onClick={() =>
-                              confirmDelete(pinpoint.id, "pinpoint")
-                            }
-                            className="flex-1 sm:flex-none px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
-                          >
-                            Supprimer
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
+              <PinpointList
+                pinpoints={pinpoints}
+                sounds={sounds}
+                onSave={handleSavePinpoint}
+                onDelete={(id) => confirmDelete(id, "pinpoint")}
+              />
             )}
 
             {activeTab === "sounds" && (
-              <div className="space-y-6">
-                <h2 className="text-xl font-bold text-gray-800">
-                  Gérer les sons
-                </h2>
-
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Télécharger un nouveau son
-                  </label>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="audio/*"
-                    onChange={handleUploadSound}
-                    className="block w-full text-sm text-gray-500
-                      file:mr-4 file:py-2 file:px-4
-                      file:rounded-lg file:border-0
-                      file:text-sm file:font-semibold
-                      file:bg-water-main file:text-white
-                      hover:file:bg-water-dark
-                      cursor-pointer"
-                  />
-                  <p className="text-xs text-gray-500 mt-2">
-                    Formats acceptés: MP3, WAV, OGG, etc. Max 4.5MB.
-                  </p>
-                </div>
-
-                <div className="text-sm text-gray-600 bg-blue-50 p-4 rounded-lg">
-                  <p className="font-semibold mb-2">Instructions:</p>
-                  <ol className="list-decimal list-inside space-y-1">
-                    <li>Téléchargez un fichier audio ci-dessus</li>
-                    <li>
-                      Copiez l&apos;URL grâce au bouton associé ou notez
-                      l&apos;ID
-                    </li>
-                    <li>
-                      Utilisez /api/sounds?id=ID dans le champ &quot;URL du
-                      son&quot; d&apos;un point
-                    </li>
-                  </ol>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-gray-800">
-                      Sons disponibles
-                    </h3>
-                    <span className="text-xs text-gray-500">
-                      {sounds.length} fichier(s)
-                    </span>
-                  </div>
-                  {sounds.length === 0 ? (
-                    <div className="text-center py-10 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-                      <div className="text-4xl mb-2">🎵</div>
-                      <p className="text-gray-500">La sonothèque est vide.</p>
-                      <p className="text-sm text-gray-400 mt-1">
-                        Téléversez un fichier audio pour commencer.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 gap-3">
-                      {sounds.map((sound) => (
-                        <div
-                          key={sound.id}
-                          className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white border border-gray-200 p-4 rounded-xl hover:shadow-sm transition-all gap-4"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="currentColor"
-                                className="w-4 h-4"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M19.952 1.651a.75.75 0 01.298.599V16.303a3 3 0 01-2.176 2.884l-1.32.377a2.553 2.553 0 11-1.403-4.909l2.311-.66a1.5 1.5 0 001.088-1.442V6.994l-9 2.572v9.737a3 3 0 01-2.176 2.884l-1.32.377a2.553 2.553 0 11-1.402-4.909l2.31-.66a1.5 1.5 0 001.088-1.442V9.017c0-.568.085-1.122.245-1.646.218-.714.757-1.3 1.455-1.562l10.04-2.868a.75.75 0 01.912.693z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-800 break-all">
-                                {sound.filename}
-                              </p>
-                              <p className="text-xs text-gray-400 font-mono mt-0.5">
-                                ID:{" "}
-                                <span className="bg-gray-100 px-1 rounded text-gray-600">
-                                  {sound.id}
-                                </span>{" "}
-                                • {(sound.size / 1024).toFixed(1)} Ko
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex gap-2 w-full sm:w-auto">
-                            <button
-                              onClick={() => togglePlaySound(sound.id)}
-                              className={`flex-1 sm:flex-none w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
-                                playingSoundId === sound.id
-                                  ? "bg-water-main text-white hover:bg-water-dark"
-                                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                              }`}
-                              title={playingSoundId === sound.id ? "Arrêter" : "Écouter"}
-                            >
-                              {playingSoundId === sound.id ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                                  <path fillRule="evenodd" d="M6.75 5.25a.75.75 0 01.75-.75H9a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H7.5a.75.75 0 01-.75-.75V5.25zm7.5 0A.75.75 0 0115 4.5h1.5a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H15a.75.75 0 01-.75-.75V5.25z" clipRule="evenodd" />
-                                </svg>
-                              ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                                  <path fillRule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clipRule="evenodd" />
-                                </svg>
-                              )}
-                            </button>
-                            <button
-                              onClick={(e) => copySoundUrl(sound.id, e)}
-                              className="flex-1 sm:flex-none px-3 py-1.5 text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors flex items-center justify-center gap-1"
-                            >
-                              Copier URL
-                            </button>
-                            <button
-                              onClick={() => confirmDelete(sound.id, "sound")}
-                              className="px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                              title="Supprimer le son"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={1.5}
-                                stroke="currentColor"
-                                className="w-4 h-4"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                                />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <SoundList
+                sounds={sounds}
+                onUpload={handleUploadSound}
+                onDelete={(id) => confirmDelete(id, "sound")}
+                onCopyUrl={copySoundUrl}
+              />
             )}
 
             {activeTab === "config" && (
-              <div className="space-y-6">
-                <h2 className="text-xl font-bold text-gray-800">
-                  Configuration de la carte
-                </h2>
-
-                <div className="space-y-4">
-                  {/* Tile Layer Picker */}
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Style de carte
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setShowTilePicker(!showTilePicker)}
-                        className="text-sm text-water-dark hover:underline"
-                      >
-                        {showTilePicker ? "Masquer les styles" : "Voir tous les styles"}
-                      </button>
-                    </div>
-                    
-                    {showTilePicker && (
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        {PRESET_TILE_LAYERS.map((layer) => (
-                          <button
-                            key={layer.id}
-                            type="button"
-                            onClick={() => {
-                              setConfig({
-                                ...config,
-                                tile_layer_url: layer.url,
-                                attribution: layer.attribution,
-                              });
-                            }}
-                            className={`p-3 rounded-lg border-2 transition-all text-left hover:shadow-md ${
-                              config.tile_layer_url === layer.url
-                                ? "border-water-main bg-water-light/50 shadow-md"
-                                : "border-gray-200 bg-white hover:border-water-light"
-                            }`}
-                          >
-                            <div className="text-2xl mb-2">{layer.preview}</div>
-                            <div className="font-medium text-sm text-gray-800 truncate">
-                              {layer.name}
-                            </div>
-                            <div className="text-xs text-gray-500 line-clamp-2">
-                              {layer.description}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    
-                    <input
-                      type="text"
-                      value={config.tile_layer_url || ""}
-                      onChange={(e) =>
-                        setConfig({ ...config, tile_layer_url: e.target.value })
-                      }
-                      className="water-input w-full"
-                      placeholder="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Sélectionnez un style prédéfini ou entrez une URL personnalisée
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Latitude du centre
-                      </label>
-                      <input
-                        type="number"
-                        step="0.000001"
-                        value={config.center_lat || ""}
-                        onChange={(e) => {
-                          const value = parseFloat(e.target.value);
-                          setConfig({
-                            ...config,
-                            center_lat: isNaN(value) ? config.center_lat : value,
-                          });
-                        }}
-                        className="water-input w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Longitude du centre
-                      </label>
-                      <input
-                        type="number"
-                        step="0.000001"
-                        value={config.center_lng || ""}
-                        onChange={(e) => {
-                          const value = parseFloat(e.target.value);
-                          setConfig({
-                            ...config,
-                            center_lng: isNaN(value) ? config.center_lng : value,
-                          });
-                        }}
-                        className="water-input w-full"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Zoom initial
-                      </label>
-                      <input
-                        type="number"
-                        value={config.zoom_level || ""}
-                        onChange={(e) => {
-                          const value = parseInt(e.target.value);
-                          setConfig({
-                            ...config,
-                            zoom_level: isNaN(value) ? config.zoom_level : value,
-                          });
-                        }}
-                        className="water-input w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Zoom min
-                      </label>
-                      <input
-                        type="number"
-                        value={config.min_zoom || ""}
-                        onChange={(e) => {
-                          const value = parseInt(e.target.value);
-                          setConfig({
-                            ...config,
-                            min_zoom: isNaN(value) ? config.min_zoom : value,
-                          });
-                        }}
-                        className="water-input w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Zoom max
-                      </label>
-                      <input
-                        type="number"
-                        value={config.max_zoom || ""}
-                        onChange={(e) => {
-                          const value = parseInt(e.target.value);
-                          setConfig({
-                            ...config,
-                            max_zoom: isNaN(value) ? config.max_zoom : value,
-                          });
-                        }}
-                        className="water-input w-full"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Attribution
-                    </label>
-                    <input
-                      type="text"
-                      value={config.attribution || ""}
-                      onChange={(e) =>
-                        setConfig({ ...config, attribution: e.target.value })
-                      }
-                      className="water-input w-full"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Thème d&apos;arrière-plan
-                    </label>
-                    <select
-                      value={config.background_theme || "water"}
-                      onChange={(e) =>
-                        setConfig({ ...config, background_theme: e.target.value })
-                      }
-                      className="water-input w-full"
-                    >
-                      <option value="water">Eau (Par défaut)</option>
-                      <option value="light">Clair</option>
-                      <option value="dark">Sombre</option>
-                      <option value="nature">Nature</option>
-                    </select>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Change l&apos;arrière-plan de la page d&apos;accueil (derrière la carte)
-                    </p>
-                  </div>
-
-                  <button onClick={handleSaveConfig} className="water-button">
-                    Sauvegarder la configuration
-                  </button>
-                </div>
-              </div>
+              <ConfigForm
+                config={config}
+                onSave={handleSaveConfig}
+              />
             )}
           </div>
         </div>

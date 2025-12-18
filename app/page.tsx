@@ -88,16 +88,16 @@ export default async function Home() {
         <Map pinpoints={pinpoints} config={config} />
       </div>
       
-      {/* Water-themed header with enhanced styling - Top left, max 30% width */}
-      <div className="absolute top-2.5 left-2.5 md:top-10 md:left-10 z-[1000] water-card p-5 rounded-2xl water-texture max-w-[30%] min-w-[200px]">
-        <div className="flex items-center gap-3 mb-2">
-          <span className="water-droplet text-3xl">💧</span>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-[#1565C0] to-[#0D47A1] bg-clip-text text-transparent">
+      {/* Water-themed header with enhanced styling - Top left */}
+      <div className="absolute top-3.5 left-3.5 md:top-11 md:left-11 z-[1000] water-card p-3 md:p-5 rounded-2xl water-texture w-auto max-w-[calc(100%-80px)] md:max-w-md min-w-[180px]">
+        <div className="flex items-center gap-3 mb-1 md:mb-2">
+          <span className="water-droplet text-2xl md:text-3xl">💧</span>
+          <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-[#1565C0] to-[#0D47A1] bg-clip-text text-transparent">
             O2Paris
           </h1>
         </div>
-        <p className="text-sm text-gray-700 font-medium">Carte Sonore Interactive</p>
-        <div className="flex items-center gap-2 mt-2">
+        <p className="text-xs md:text-sm text-gray-700 font-medium">Carte Sonore Interactive</p>
+        <div className="hidden md:flex items-center gap-2 mt-2">
           <span className="text-lg">🌊</span>
           <p className="text-xs text-[#1565C0] font-semibold tracking-wide uppercase">
             Sons de l&apos;eau à Paris
@@ -105,10 +105,10 @@ export default async function Home() {
         </div>
       </div>
       
-      {/* Admin link with water styling */}
+      {/* Admin link with water styling - Repositioned to avoid overlap with zoom/layers */}
       <a
         href="/admin"
-        className="absolute top-2.5 right-2.5 md:top-10 md:right-10 z-[1000] water-card p-3 rounded-full hover:scale-110 transition-all duration-300 group"
+        className="absolute top-3.5 right-3.5 md:top-11 md:right-11 z-[1000] water-card p-2 md:p-3 rounded-full hover:scale-110 transition-all duration-300 group shadow-lg"
         title="Administration"
       >
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-[#1565C0] group-hover:rotate-90 transition-transform duration-300">

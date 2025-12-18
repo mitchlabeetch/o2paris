@@ -4,40 +4,34 @@
 
   ▲ Next.js 14.2.35
   - Local:        http://localhost:3000
-  - Environments: .env
 
  ✓ Starting...
- ✓ Ready in 1755ms
- ○ Compiling /admin ...
- ✓ Compiled /admin in 6.1s (494 modules)
- GET /admin 200 in 6824ms
- ✓ Compiled in 703ms (248 modules)
- ○ Compiling /api/config ...
- ✓ Compiled /api/config in 3.7s (261 modules)
- ✓ Compiled (265 modules)
-Attention: Next.js now collects completely anonymous telemetry regarding usage.
-This information is used to shape Next.js' roadmap and prioritize features.
-You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
-https://nextjs.org/telemetry
-
- ✓ Ready in 1805ms
- ○ Compiling /admin ...
- ✓ Compiled /admin in 5.5s (494 modules)
- GET /admin 200 in 6253ms
- ✓ Compiled in 742ms (248 modules)
- ○ Compiling /api/sounds ...
- ✓ Compiled /api/sounds in 4.1s (261 modules)
- ✓ Compiled (265 modules)
- GET /admin 200 in 205ms
- GET /api/pinpoints 200 in 363ms
- GET /api/sounds 200 in 372ms
- GET /api/config 200 in 378ms
- GET /api/pinpoints 200 in 135ms
- GET /api/sounds 200 in 128ms
- GET /api/config 200 in 128ms
+ ✓ Ready in 1714ms
  ○ Compiling / ...
- ✓ Compiled / in 1214ms (605 modules)
- GET / 200 in 2048ms
- ✓ Compiled in 730ms (585 modules)
- ✓ Compiled in 389ms (585 modules)
- ✓ Compiled in 3.5s (296 modules)
+ ✓ Compiled / in 5.9s (585 modules)
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ✓ Compiled in 878ms (287 modules)
+ GET / 200 in 6778ms
+ ○ Compiling /admin ...
+ ✓ Compiled /admin in 943ms (581 modules)
+ ⚠ Unsupported metadata viewport is configured in metadata export in /admin. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /admin 200 in 1097ms
+ ✓ Compiled /_not-found in 156ms (582 modules)
+ ⚠ Unsupported metadata viewport is configured in metadata export in /non-existent-page. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /non-existent-page. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ GET /non-existent-page 404 in 208ms
+   Reload env: .env
+ ✓ Compiled in 3.5s (568 modules)
+ ✓ Compiled in 1642ms (582 modules)
+ ✓ Compiled in 2.2s (582 modules)
+ GET / 200 in 1311ms
+ GET / 200 in 747ms
