@@ -2,6 +2,8 @@
 
 Carte sonore interactive pour un projet en collaboration avec Eau de Paris
 
+> **📖 NEW! Complete Documentation Available!** Check out [DOCUMENTATION.md](./DOCUMENTATION.md) for comprehensive, friendly documentation in English. **Note: App content is in French** (project-specific for Eau de Paris, but you're welcome to adapt it for your own projects!)
+
 > **🔊 Sounds Not Playing?** If sounds fall back to beep when clicked, see [FIXING_SOUNDS.md](./FIXING_SOUNDS.md) for the complete solution.
 
 ## Description
@@ -175,6 +177,7 @@ Ce projet est développé pour Eau de Paris.
 
 | Document | Description |
 |----------|-------------|
+| **[DOCUMENTATION.md](./DOCUMENTATION.md)** | 📖 **COMPLETE GUIDE** - Comprehensive, friendly documentation (English) |
 | **[QUICK_FIX.md](./QUICK_FIX.md)** | ⚡ Solution rapide (5 min) pour problèmes de son |
 | **[FIXING_SOUNDS.md](./FIXING_SOUNDS.md)** | 🔊 Guide complet pour réparer la lecture audio |
 | **[VERCEL_SETUP.md](./VERCEL_SETUP.md)** | ⚙️ Configuration Vercel et variables d'environnement |
