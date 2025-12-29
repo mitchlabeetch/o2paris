@@ -1,18 +1,44 @@
+'use client';
+
 import { TileGrid } from '@/components/TileGrid';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import type { MapConfig } from '@/lib/db';
 
 export default function Home() {
+  const [config, setConfig] = useState<Partial<MapConfig>>({
+    app_title: 'Eau de Paris',
+    app_subtitle: 'Une expérience sonore et visuelle',
+    font_family: 'Playfair Display',
+    primary_color: '#2196f3',
+  });
+
+  useEffect(() => {
+    fetch('/api/config')
+      .then(res => res.json())
+      .then(data => setConfig(data))
+      .catch(console.error);
+  }, []);
+
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-500">
+    <main 
+      className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-500"
+      style={{
+        fontFamily: config.font_family || 'Playfair Display',
+      }}
+    >
       <div className="fixed top-0 left-0 w-full z-10 bg-gradient-to-b from-white/80 to-transparent dark:from-black/80 h-24 pointer-events-none" />
       
       <div className="pt-8 pb-20">
          <header className="text-center mb-12">
-            <h1 className="text-5xl md:text-7xl font-serif text-gray-900 dark:text-white mb-4 tracking-tighter">
-              Eau de Paris
+            <h1 
+              className="text-5xl md:text-7xl font-serif text-gray-900 dark:text-white mb-4 tracking-tighter"
+              style={{ fontFamily: config.font_family || 'Playfair Display' }}
+            >
+              {config.app_title || 'Eau de Paris'}
             </h1>
             <p className="text-xl text-gray-500 font-light italic">
-              Une expérience sonore et visuelle
+              {config.app_subtitle || 'Une expérience sonore et visuelle'}
             </p>
          </header>
 

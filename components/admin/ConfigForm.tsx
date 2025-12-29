@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import type { MapConfig, CustomBackground } from '@/lib/db';
-import { PRESET_TILE_LAYERS, BACKGROUND_PRESETS } from '@/lib/db';
+import { BACKGROUND_PRESETS, OVERLAY_ICON_PRESETS, FONT_PRESETS } from '@/lib/db';
 
 interface ConfigFormProps {
   config: Partial<MapConfig>;
@@ -11,8 +11,8 @@ interface ConfigFormProps {
 
 export default function ConfigForm({ config: initialConfig, onSave }: ConfigFormProps) {
   const [config, setConfig] = useState(initialConfig);
-  const [showTilePicker, setShowTilePicker] = useState(false);
   const [showBackgroundPicker, setShowBackgroundPicker] = useState(false);
+  const [showOverlayIconPicker, setShowOverlayIconPicker] = useState(false);
   const [customBackgrounds, setCustomBackgrounds] = useState<CustomBackground[]>([]);
   const [uploadingBackground, setUploadingBackground] = useState(false);
 
@@ -107,178 +107,192 @@ export default function ConfigForm({ config: initialConfig, onSave }: ConfigForm
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-bold text-gray-800">
-        Configuration de la carte
+        Configuration globale
       </h2>
 
       <div className="space-y-4">
-        {/* Tile Layer Picker */}
-        <div>
-          <div className="flex justify-between items-center mb-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Style de carte
-            </label>
-            <button
-              type="button"
-              onClick={() => setShowTilePicker(!showTilePicker)}
-              className="text-sm text-water-dark hover:underline"
-            >
-              {showTilePicker ? "Masquer les styles" : "Voir tous les styles"}
-            </button>
-          </div>
-
-          {showTilePicker && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-              {PRESET_TILE_LAYERS.map((layer) => (
-                <button
-                  key={layer.id}
-                  type="button"
-                  onClick={() => {
-                    setConfig({
-                      ...config,
-                      tile_layer_url: layer.url,
-                      attribution: layer.attribution,
-                    });
-                  }}
-                  className={`p-3 rounded-lg border-2 transition-all text-left hover:shadow-md ${
-                    config.tile_layer_url === layer.url
-                      ? "border-water-main bg-water-light/50 shadow-md"
-                      : "border-gray-200 bg-white hover:border-water-light"
-                  }`}
-                >
-                  <div className="text-2xl mb-2">{layer.preview}</div>
-                  <div className="font-medium text-sm text-gray-800 truncate">
-                    {layer.name}
-                  </div>
-                  <div className="text-xs text-gray-500 line-clamp-2">
-                    {layer.description}
-                  </div>
-                </button>
-              ))}
+        {/* Section 1: Titles & Text */}
+        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">📝 Titres et textes</h3>
+          
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Titre de l&apos;application
+              </label>
+              <input
+                type="text"
+                value={config.app_title || ""}
+                onChange={(e) =>
+                  setConfig({ ...config, app_title: e.target.value })
+                }
+                className="water-input w-full"
+                placeholder="Eau de Paris"
+              />
             </div>
-          )}
 
-          <input
-            type="text"
-            value={config.tile_layer_url || ""}
-            onChange={(e) =>
-              setConfig({ ...config, tile_layer_url: e.target.value })
-            }
-            className="water-input w-full"
-            placeholder="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Sélectionnez un style prédéfini ou entrez une URL personnalisée
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Latitude du centre
-            </label>
-            <input
-              type="number"
-              step="0.000001"
-              value={config.center_lat || ""}
-              onChange={(e) => {
-                const value = parseFloat(e.target.value);
-                setConfig({
-                  ...config,
-                  center_lat: isNaN(value) ? config.center_lat : value,
-                });
-              }}
-              className="water-input w-full"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Longitude du centre
-            </label>
-            <input
-              type="number"
-              step="0.000001"
-              value={config.center_lng || ""}
-              onChange={(e) => {
-                const value = parseFloat(e.target.value);
-                setConfig({
-                  ...config,
-                  center_lng: isNaN(value) ? config.center_lng : value,
-                });
-              }}
-              className="water-input w-full"
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Sous-titre
+              </label>
+              <input
+                type="text"
+                value={config.app_subtitle || ""}
+                onChange={(e) =>
+                  setConfig({ ...config, app_subtitle: e.target.value })
+                }
+                className="water-input w-full"
+                placeholder="Une expérience sonore et visuelle"
+              />
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Zoom initial
-            </label>
-            <input
-              type="number"
-              value={config.zoom_level || ""}
-              onChange={(e) => {
-                const value = parseInt(e.target.value);
-                setConfig({
-                  ...config,
-                  zoom_level: isNaN(value) ? config.zoom_level : value,
-                });
-              }}
-              className="water-input w-full"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Zoom min
-            </label>
-            <input
-              type="number"
-              value={config.min_zoom || ""}
-              onChange={(e) => {
-                const value = parseInt(e.target.value);
-                setConfig({
-                  ...config,
-                  min_zoom: isNaN(value) ? config.min_zoom : value,
-                });
-              }}
-              className="water-input w-full"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Zoom max
-            </label>
-            <input
-              type="number"
-              value={config.max_zoom || ""}
-              onChange={(e) => {
-                const value = parseInt(e.target.value);
-                setConfig({
-                  ...config,
-                  max_zoom: isNaN(value) ? config.max_zoom : value,
-                });
-              }}
-              className="water-input w-full"
-            />
+        {/* Section 2: Colors & Fonts */}
+        <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">🎨 Couleurs et police</h3>
+          
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Police de caractères
+              </label>
+              <select
+                value={config.font_family || "Playfair Display"}
+                onChange={(e) =>
+                  setConfig({ ...config, font_family: e.target.value })
+                }
+                className="water-input w-full"
+              >
+                {FONT_PRESETS.map((font) => (
+                  <option key={font.id} value={font.value}>
+                    {font.name} ({font.style})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Couleur principale
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={config.primary_color || "#2196f3"}
+                    onChange={(e) =>
+                      setConfig({ ...config, primary_color: e.target.value })
+                    }
+                    className="h-10 w-16 rounded border border-gray-300 cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={config.primary_color || "#2196f3"}
+                    onChange={(e) =>
+                      setConfig({ ...config, primary_color: e.target.value })
+                    }
+                    className="water-input flex-1"
+                    placeholder="#2196f3"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Couleur secondaire
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={config.secondary_color || "#1565c0"}
+                    onChange={(e) =>
+                      setConfig({ ...config, secondary_color: e.target.value })
+                    }
+                    className="h-10 w-16 rounded border border-gray-300 cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={config.secondary_color || "#1565c0"}
+                    onChange={(e) =>
+                      setConfig({ ...config, secondary_color: e.target.value })
+                    }
+                    className="water-input flex-1"
+                    placeholder="#1565c0"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Attribution
-          </label>
-          <input
-            type="text"
-            value={config.attribution || ""}
-            onChange={(e) =>
-              setConfig({ ...config, attribution: e.target.value })
-            }
-            className="water-input w-full"
-          />
+        {/* Section 3: Loading Overlay Icon */}
+        <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">⏳ Icône de chargement</h3>
+          
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Icône pour l&apos;écran de chargement
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowOverlayIconPicker(!showOverlayIconPicker)}
+                className="text-sm text-water-dark hover:underline"
+              >
+                {showOverlayIconPicker ? "Masquer" : "Voir toutes les icônes"}
+              </button>
+            </div>
+
+            {showOverlayIconPicker && (
+              <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 mb-4 p-4 bg-white rounded-lg border border-gray-200">
+                {OVERLAY_ICON_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => {
+                      setConfig({
+                        ...config,
+                        overlay_icon: preset.icon,
+                      });
+                    }}
+                    className={`p-2 rounded-lg border-2 transition-all text-center hover:shadow-md ${
+                      config.overlay_icon === preset.icon
+                        ? "border-water-main bg-water-light shadow-md"
+                        : "border-gray-200 bg-white hover:border-water-light"
+                    }`}
+                    title={preset.name}
+                  >
+                    <div className="text-3xl">{preset.icon}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="flex items-center gap-3">
+              <div className="text-5xl p-3 bg-white rounded-lg border-2 border-gray-300">
+                {config.overlay_icon || "💧"}
+              </div>
+              <input
+                type="text"
+                value={config.overlay_icon || ""}
+                onChange={(e) =>
+                  setConfig({ ...config, overlay_icon: e.target.value })
+                }
+                className="water-input flex-1"
+                placeholder="💧"
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Choisissez une icône prédéfinie ou entrez un emoji personnalisé
+            </p>
+          </div>
         </div>
 
-        <div>
+        {/* Background Theme Section */}
+        <div className="p-4 bg-pink-50 rounded-lg border border-pink-200">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">🎭 Arrière-plan</h3>
+          
           <div className="flex justify-between items-center mb-2">
             <label className="block text-sm font-medium text-gray-700">
               Thème d&apos;arrière-plan
@@ -418,8 +432,8 @@ export default function ConfigForm({ config: initialConfig, onSave }: ConfigForm
           </p>
         </div>
 
-        <button onClick={handleSave} className="water-button">
-          Sauvegarder la configuration
+        <button onClick={handleSave} className="water-button w-full text-lg py-3">
+          💾 Sauvegarder la configuration
         </button>
       </div>
     </div>

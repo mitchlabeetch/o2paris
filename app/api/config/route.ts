@@ -71,6 +71,12 @@ export async function PUT(request: NextRequest) {
     const tile_layer_url = getValue('tile_layer_url', currentConfig.tile_layer_url);
     const attribution = getValue('attribution', currentConfig.attribution);
     const background_theme = getValue('background_theme', currentConfig.background_theme);
+    const app_title = getValue('app_title', currentConfig.app_title);
+    const app_subtitle = getValue('app_subtitle', currentConfig.app_subtitle);
+    const overlay_icon = getValue('overlay_icon', currentConfig.overlay_icon);
+    const font_family = getValue('font_family', currentConfig.font_family);
+    const primary_color = getValue('primary_color', currentConfig.primary_color);
+    const secondary_color = getValue('secondary_color', currentConfig.secondary_color);
 
     // Numeric fields need special handling because they might be strings in body OR currentConfig (if from DB)
     const getNumericValue = (key: string, current: any) => {
@@ -104,8 +110,16 @@ export async function PUT(request: NextRequest) {
     if (currentConfigRows.length === 0) {
       // Insert new config
       const result = await sql`
-        INSERT INTO map_config (tile_layer_url, center_lat, center_lng, zoom_level, max_zoom, min_zoom, attribution, background_theme)
-        VALUES (${tile_layer_url}, ${centerLatNum}, ${centerLngNum}, ${zoomLevelNum}, ${maxZoomNum}, ${minZoomNum}, ${attribution || ''}, ${background_theme || 'water'})
+        INSERT INTO map_config (
+          tile_layer_url, center_lat, center_lng, zoom_level, max_zoom, min_zoom, attribution, 
+          background_theme, app_title, app_subtitle, overlay_icon, font_family, primary_color, secondary_color
+        )
+        VALUES (
+          ${tile_layer_url}, ${centerLatNum}, ${centerLngNum}, ${zoomLevelNum}, ${maxZoomNum}, ${minZoomNum}, 
+          ${attribution || ''}, ${background_theme || 'water'}, ${app_title || 'Eau de Paris'}, 
+          ${app_subtitle || 'Une expérience sonore et visuelle'}, ${overlay_icon || '💧'}, 
+          ${font_family || 'Playfair Display'}, ${primary_color || '#2196f3'}, ${secondary_color || '#1565c0'}
+        )
         RETURNING *
       `;
       return NextResponse.json(result[0]);
@@ -123,6 +137,12 @@ export async function PUT(request: NextRequest) {
         min_zoom = ${minZoomNum},
         attribution = ${attribution || ''},
         background_theme = ${background_theme || 'water'},
+        app_title = ${app_title || 'Eau de Paris'},
+        app_subtitle = ${app_subtitle || 'Une expérience sonore et visuelle'},
+        overlay_icon = ${overlay_icon || '💧'},
+        font_family = ${font_family || 'Playfair Display'},
+        primary_color = ${primary_color || '#2196f3'},
+        secondary_color = ${secondary_color || '#1565c0'},
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ${currentConfigRows[0].id}
       RETURNING *
