@@ -32,6 +32,18 @@ export interface Pinpoint {
   updated_at: Date;
 }
 
+export interface Tile {
+  id: number;
+  title: string;
+  description: string;
+  sound_url: string;
+  image_url: string;
+  display_order: number;
+  style_config?: any; // JSONB
+  created_at: Date;
+  updated_at: Date;
+}
+
 export interface MapConfig {
   id: number;
   tile_layer_url: string;
@@ -46,6 +58,14 @@ export interface MapConfig {
 }
 
 export interface Sound {
+  id: number;
+  filename: string;
+  mime_type: string;
+  size: number;
+  created_at: Date;
+}
+
+export interface ImageFile {
   id: number;
   filename: string;
   mime_type: string;
@@ -332,6 +352,89 @@ export const SEED_PINPOINTS: Omit<Pinpoint, 'id' | 'created_at' | 'updated_at'>[
   },
 ];
 
+export const SEED_TILES: Omit<Tile, 'id' | 'created_at' | 'updated_at'>[] = [
+  {
+    title: 'Lumières de Paris',
+    description: "Une balade nocturne à travers les rues illuminées de la ville lumière. L'atmosphère est électrique et romantique.",
+    sound_url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_76b4b38183.mp3?filename=water-nature.wav',
+    image_url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=2073&auto=format&fit=crop',
+    display_order: 1,
+    style_config: { font: 'Playfair Display', color: '#ffffff' }
+  },
+  {
+    title: 'Montmartre le matin',
+    description: "Le calme avant la tempête touristique, les pavés luisants de rosée et l'odeur du pain frais.",
+    sound_url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_243a828eed.mp3?filename=small-river-in-forest-loop-116199.mp3',
+    image_url: 'https://images.unsplash.com/photo-1541628951107-e9e13d4b62f7?q=80&w=2168&auto=format&fit=crop',
+    display_order: 2,
+    style_config: { font: 'Lato', color: '#f0f0f0' }
+  },
+  {
+    title: 'Jardin du Luxembourg',
+    description: "Les chaises vertes emblématiques, les voiliers sur le bassin et les enfants qui jouent.",
+    sound_url: 'https://cdn.pixabay.com/download/audio/2023/03/12/audio_b998ccfe80.mp3?filename=fountain-ambient-143925.mp3',
+    image_url: 'https://images.unsplash.com/photo-1550340499-a6c6088e6619?q=80&w=2070&auto=format&fit=crop',
+    display_order: 3,
+    style_config: { font: 'Playfair Display', color: '#ffffff' }
+  },
+  {
+    title: 'Café de Flore',
+    description: "Le brouhaha des conversations intellectuelles, le cliquetis des tasses et l'arôme du café.",
+    sound_url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_76b4b38183.mp3?filename=water-nature.wav',
+    image_url: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=2187&auto=format&fit=crop',
+    display_order: 4,
+    style_config: { font: 'Lato', color: '#ffffff' }
+  },
+  {
+    title: 'Pont Alexandre III',
+    description: "Dorures, statues et vue imprenable sur la Tour Eiffel et les Invalides.",
+    sound_url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_243a828eed.mp3?filename=small-river-in-forest-loop-116199.mp3',
+    image_url: 'https://images.unsplash.com/photo-1499856871940-a09627c6dcf6?q=80&w=2067&auto=format&fit=crop',
+    display_order: 5,
+    style_config: { font: 'Playfair Display', color: '#ffffff' }
+  },
+  {
+    title: 'Le Marais',
+    description: "Ruelles étroites, boutiques branchées et architecture médiévale préservée.",
+    sound_url: 'https://cdn.pixabay.com/download/audio/2023/03/12/audio_b998ccfe80.mp3?filename=fountain-ambient-143925.mp3',
+    image_url: 'https://images.unsplash.com/photo-1558450130-97eb3ae4d16d?q=80&w=2070&auto=format&fit=crop',
+    display_order: 6,
+    style_config: { font: 'Lato', color: '#f0f0f0' }
+  },
+  {
+    title: 'Notre Dame',
+    description: "Majestueuse et résiliente, au cœur de l'Île de la Cité.",
+    sound_url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_76b4b38183.mp3?filename=water-nature.wav',
+    image_url: 'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=2070&auto=format&fit=crop',
+    display_order: 7,
+    style_config: { font: 'Playfair Display', color: '#ffffff' }
+  },
+  {
+    title: 'Opéra Garnier',
+    description: "Opulence, velours rouge et dorures, le temple de la danse et de la musique.",
+    sound_url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_243a828eed.mp3?filename=small-river-in-forest-loop-116199.mp3',
+    image_url: 'https://images.unsplash.com/photo-1540324155974-7523202daa3f?q=80&w=2070&auto=format&fit=crop',
+    display_order: 8,
+    style_config: { font: 'Lato', color: '#ffffff' }
+  },
+  {
+    title: 'Bibliothèque Sainte-Geneviève',
+    description: "Le silence studieux et la lumière douce des lampes vertes sur les longues tables.",
+    sound_url: 'https://cdn.pixabay.com/download/audio/2023/03/12/audio_b998ccfe80.mp3?filename=fountain-ambient-143925.mp3',
+    image_url: 'https://images.unsplash.com/photo-1594132474996-e17036c61556?q=80&w=2070&auto=format&fit=crop',
+    display_order: 9,
+    style_config: { font: 'Playfair Display', color: '#ffffff' }
+  },
+  {
+    title: 'Metro Parisien',
+    description: "Le style Art Nouveau des entrées, le carrelage blanc et le rythme de la ville.",
+    sound_url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_76b4b38183.mp3?filename=water-nature.wav',
+    image_url: 'https://images.unsplash.com/photo-1563721051513-e71e3b5e4d2a?q=80&w=2070&auto=format&fit=crop',
+    display_order: 10,
+    style_config: { font: 'Lato', color: '#f0f0f0' }
+  }
+];
+
 export const FALLBACK_PINPOINTS: Pinpoint[] = SEED_PINPOINTS.map((pinpoint, index) => ({
   ...pinpoint,
   id: index + 1,
@@ -352,7 +455,7 @@ export async function initDatabase() {
       throw new Error('DATABASE_URL is not configured. Set it before initializing the database.');
     }
 
-    // Create pinpoints table
+    // Create pinpoints table (Legacy support)
     await sql`
       CREATE TABLE IF NOT EXISTS pinpoints (
         id SERIAL PRIMARY KEY,
@@ -365,6 +468,21 @@ export async function initDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT unique_pinpoint_location_title UNIQUE (latitude, longitude, title)
+      )
+    `;
+
+    // Create tiles table (New Photo-based Navigation)
+    await sql`
+      CREATE TABLE IF NOT EXISTS tiles (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        sound_url TEXT,
+        image_url TEXT,
+        display_order INTEGER DEFAULT 0,
+        style_config JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `;
 
@@ -407,6 +525,18 @@ export async function initDatabase() {
       )
     `;
 
+    // Create images table for storing image files
+    await sql`
+      CREATE TABLE IF NOT EXISTS images (
+        id SERIAL PRIMARY KEY,
+        filename VARCHAR(255) NOT NULL,
+        data BYTEA NOT NULL,
+        mime_type VARCHAR(100) NOT NULL,
+        size INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
     // Create custom_icons table for user-uploaded icons
     await sql`
       CREATE TABLE IF NOT EXISTS custom_icons (
@@ -433,7 +563,9 @@ export async function initDatabase() {
 
     // Helpful indexes for location & chronology
     await sql`CREATE INDEX IF NOT EXISTS idx_pinpoints_location ON pinpoints(latitude, longitude)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_tiles_order ON tiles(display_order)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_sounds_created ON sounds(created_at)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_images_created ON images(created_at)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_custom_icons_created ON custom_icons(created_at)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_custom_backgrounds_created ON custom_backgrounds(created_at)`;
 
@@ -462,6 +594,17 @@ export async function initDatabase() {
         await sql`
           INSERT INTO pinpoints (latitude, longitude, title, description, sound_url, icon)
           VALUES (${point.latitude}, ${point.longitude}, ${point.title}, ${point.description}, ${point.sound_url}, ${point.icon})
+        `;
+      }
+    }
+
+    // Seed sample tiles when empty
+    const tilesCount = await sql`SELECT COUNT(*) as count FROM tiles`;
+    if (Number(tilesCount[0].count) === 0) {
+      for (const tile of SEED_TILES) {
+        await sql`
+          INSERT INTO tiles (title, description, sound_url, image_url, display_order, style_config)
+          VALUES (${tile.title}, ${tile.description}, ${tile.sound_url}, ${tile.image_url}, ${tile.display_order}, ${tile.style_config})
         `;
       }
     }
