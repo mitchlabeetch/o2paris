@@ -14,10 +14,25 @@ export default function Home() {
   });
 
   useEffect(() => {
-    fetch('/api/config')
-      .then(res => res.json())
-      .then(data => setConfig(data))
-      .catch(console.error);
+    const fetchConfig = () => {
+      fetch('/api/config', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      })
+        .then(res => res.json())
+        .then(data => setConfig(data))
+        .catch(console.error);
+    };
+
+    // Initial fetch
+    fetchConfig();
+
+    // Poll for config changes every 5 seconds
+    const interval = setInterval(fetchConfig, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (

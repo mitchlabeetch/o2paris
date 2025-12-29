@@ -21,16 +21,31 @@ export function TileGrid() {
   const loaderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch('/api/tiles')
-      .then(res => res.json())
-      .then(data => {
-        setOriginalTiles(data);
-        // Initial load: 3 sets of data to fill screen
-        if (data.length > 0) {
-            setDisplayTiles([...data, ...data, ...data]);
-        }
+    const fetchTiles = () => {
+      fetch('/api/tiles', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
       })
-      .catch(err => console.error(err));
+        .then(res => res.json())
+        .then(data => {
+          setOriginalTiles(data);
+          // Initial load: display tiles once
+          if (data.length > 0) {
+              setDisplayTiles(data);
+          }
+        })
+        .catch(err => console.error(err));
+    };
+
+    // Initial fetch
+    fetchTiles();
+
+    // Poll for tile changes every 5 seconds
+    const interval = setInterval(fetchTiles, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Infinite Scroll Logic
