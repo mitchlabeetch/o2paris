@@ -32,8 +32,15 @@ export function TileGrid() {
         .then(data => {
           // Ensure data is an array before setting state
           if (Array.isArray(data) && data.length > 0) {
-            setOriginalTiles(data);
-            setDisplayTiles(data);
+            setOriginalTiles(prevOriginal => {
+              // Only update if data has actually changed
+              if (JSON.stringify(prevOriginal) !== JSON.stringify(data)) {
+                // Reset display tiles when original tiles change
+                setDisplayTiles(data);
+                return data;
+              }
+              return prevOriginal;
+            });
           } else if (Array.isArray(data) && data.length === 0) {
             // Empty array is valid
             setOriginalTiles([]);

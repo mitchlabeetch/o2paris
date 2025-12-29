@@ -22,7 +22,15 @@ export default function Home() {
         },
       })
         .then(res => res.json())
-        .then(data => setConfig(data))
+        .then(data => {
+          setConfig(prevConfig => {
+            // Only update if config has actually changed
+            if (JSON.stringify(prevConfig) !== JSON.stringify(data)) {
+              return data;
+            }
+            return prevConfig;
+          });
+        })
         .catch(console.error);
     };
 
