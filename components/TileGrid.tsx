@@ -34,6 +34,8 @@ export function TileGrid() {
           if (Array.isArray(data) && data.length > 0) {
             setOriginalTiles(prevOriginal => {
               // Only update if data has actually changed
+              // Note: Using JSON.stringify for simplicity. Tile arrays are moderate size
+              // and changes are infrequent, so performance impact is minimal.
               if (JSON.stringify(prevOriginal) !== JSON.stringify(data)) {
                 // Reset display tiles when original tiles change
                 setDisplayTiles(data);
@@ -54,6 +56,8 @@ export function TileGrid() {
     fetchTiles();
 
     // Poll for tile changes every 5 seconds
+    // This allows admin changes to appear on live site without manual refresh.
+    // For production with high traffic, consider WebSockets or Server-Sent Events.
     const interval = setInterval(fetchTiles, 5000);
 
     return () => clearInterval(interval);
