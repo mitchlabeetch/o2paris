@@ -55,6 +55,12 @@ export interface MapConfig {
   attribution: string;
   updated_at: Date;
   background_theme?: string;
+  app_title?: string;
+  app_subtitle?: string;
+  overlay_icon?: string;
+  font_family?: string;
+  primary_color?: string;
+  secondary_color?: string;
 }
 
 export interface Sound {
@@ -100,6 +106,12 @@ export const DEFAULT_MAP_CONFIG: Omit<MapConfig, 'id' | 'updated_at'> = {
   min_zoom: 10,
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   background_theme: 'water',
+  app_title: 'Eau de Paris',
+  app_subtitle: 'Une expérience sonore et visuelle',
+  overlay_icon: '💧',
+  font_family: 'Playfair Display',
+  primary_color: '#2196f3',
+  secondary_color: '#1565c0',
 };
 
 // Background theme presets with visual previews
@@ -325,6 +337,39 @@ export const ICON_CATEGORIES = {
 // Flat list of all icons for easy access
 export const ALL_PRESET_ICONS = Object.values(ICON_CATEGORIES).flatMap(cat => cat.icons);
 
+// Overlay icon presets for loading screen
+export const OVERLAY_ICON_PRESETS = [
+  { id: 'droplet', icon: '💧', name: 'Goutte d\'eau' },
+  { id: 'wave', icon: '🌊', name: 'Vague' },
+  { id: 'droplets', icon: '💦', name: 'Gouttelettes' },
+  { id: 'fountain', icon: '⛲', name: 'Fontaine' },
+  { id: 'eiffel', icon: '🗼', name: 'Tour Eiffel' },
+  { id: 'paris', icon: '🇫🇷', name: 'Drapeau France' },
+  { id: 'music', icon: '🎵', name: 'Note de musique' },
+  { id: 'sound', icon: '🔊', name: 'Haut-parleur' },
+  { id: 'headphones', icon: '🎧', name: 'Casque audio' },
+  { id: 'map', icon: '🗺️', name: 'Carte' },
+  { id: 'compass', icon: '🧭', name: 'Boussole' },
+  { id: 'sparkles', icon: '✨', name: 'Étincelles' },
+  { id: 'star', icon: '⭐', name: 'Étoile' },
+  { id: 'heart', icon: '❤️', name: 'Cœur' },
+  { id: 'leaf', icon: '🍃', name: 'Feuille' },
+];
+
+// Font family presets
+export const FONT_PRESETS = [
+  { id: 'playfair', name: 'Playfair Display', value: 'Playfair Display', style: 'serif' },
+  { id: 'lato', name: 'Lato', value: 'Lato', style: 'sans-serif' },
+  { id: 'roboto', name: 'Roboto', value: 'Roboto', style: 'sans-serif' },
+  { id: 'opensans', name: 'Open Sans', value: 'Open Sans', style: 'sans-serif' },
+  { id: 'montserrat', name: 'Montserrat', value: 'Montserrat', style: 'sans-serif' },
+  { id: 'raleway', name: 'Raleway', value: 'Raleway', style: 'sans-serif' },
+  { id: 'merriweather', name: 'Merriweather', value: 'Merriweather', style: 'serif' },
+  { id: 'ptsans', name: 'PT Sans', value: 'PT Sans', style: 'sans-serif' },
+  { id: 'sourcesans', name: 'Source Sans Pro', value: 'Source Sans Pro', style: 'sans-serif' },
+  { id: 'nunito', name: 'Nunito', value: 'Nunito', style: 'sans-serif' },
+];
+
 export const SEED_PINPOINTS: Omit<Pinpoint, 'id' | 'created_at' | 'updated_at'>[] = [
   {
     latitude: 48.8566,
@@ -503,14 +548,40 @@ export async function initDatabase() {
     `;
 
     // Check if background_theme column exists, add it if not (migration)
-    const columns = await sql`
+    const backgroundThemeCol = await sql`
       SELECT column_name
       FROM information_schema.columns
       WHERE table_name = 'map_config' AND column_name = 'background_theme'
     `;
 
-    if (columns.length === 0) {
+    if (backgroundThemeCol.length === 0) {
       await sql`ALTER TABLE map_config ADD COLUMN background_theme VARCHAR(50) DEFAULT 'water'`;
+    }
+
+    // Add new customization columns (migration)
+    const newColumns = ['app_title', 'app_subtitle', 'overlay_icon', 'font_family', 'primary_color', 'secondary_color'];
+    for (const col of newColumns) {
+      const colCheck = await sql`
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'map_config' AND column_name = ${col}
+      `;
+      
+      if (colCheck.length === 0) {
+        if (col === 'app_title') {
+          await sql`ALTER TABLE map_config ADD COLUMN app_title VARCHAR(255) DEFAULT 'Eau de Paris'`;
+        } else if (col === 'app_subtitle') {
+          await sql`ALTER TABLE map_config ADD COLUMN app_subtitle VARCHAR(255) DEFAULT 'Une expérience sonore et visuelle'`;
+        } else if (col === 'overlay_icon') {
+          await sql`ALTER TABLE map_config ADD COLUMN overlay_icon VARCHAR(10) DEFAULT '💧'`;
+        } else if (col === 'font_family') {
+          await sql`ALTER TABLE map_config ADD COLUMN font_family VARCHAR(100) DEFAULT 'Playfair Display'`;
+        } else if (col === 'primary_color') {
+          await sql`ALTER TABLE map_config ADD COLUMN primary_color VARCHAR(20) DEFAULT '#2196f3'`;
+        } else if (col === 'secondary_color') {
+          await sql`ALTER TABLE map_config ADD COLUMN secondary_color VARCHAR(20) DEFAULT '#1565c0'`;
+        }
+      }
     }
 
     // Create sounds table for storing audio files
@@ -573,7 +644,10 @@ export async function initDatabase() {
     const configs = await sql`SELECT COUNT(*) as count FROM map_config`;
     if (Number(configs[0].count) === 0) {
       await sql`
-        INSERT INTO map_config (tile_layer_url, center_lat, center_lng, zoom_level, max_zoom, min_zoom, attribution, background_theme)
+        INSERT INTO map_config (
+          tile_layer_url, center_lat, center_lng, zoom_level, max_zoom, min_zoom, attribution, 
+          background_theme, app_title, app_subtitle, overlay_icon, font_family, primary_color, secondary_color
+        )
         VALUES (
           ${DEFAULT_MAP_CONFIG.tile_layer_url},
           ${DEFAULT_MAP_CONFIG.center_lat},
@@ -582,7 +656,13 @@ export async function initDatabase() {
           ${DEFAULT_MAP_CONFIG.max_zoom},
           ${DEFAULT_MAP_CONFIG.min_zoom},
           ${DEFAULT_MAP_CONFIG.attribution},
-          ${DEFAULT_MAP_CONFIG.background_theme}
+          ${DEFAULT_MAP_CONFIG.background_theme},
+          ${DEFAULT_MAP_CONFIG.app_title},
+          ${DEFAULT_MAP_CONFIG.app_subtitle},
+          ${DEFAULT_MAP_CONFIG.overlay_icon},
+          ${DEFAULT_MAP_CONFIG.font_family},
+          ${DEFAULT_MAP_CONFIG.primary_color},
+          ${DEFAULT_MAP_CONFIG.secondary_color}
         )
       `;
     }

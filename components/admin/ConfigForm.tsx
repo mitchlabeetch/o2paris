@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import type { MapConfig, CustomBackground } from '@/lib/db';
-import { PRESET_TILE_LAYERS, BACKGROUND_PRESETS } from '@/lib/db';
+import { PRESET_TILE_LAYERS, BACKGROUND_PRESETS, OVERLAY_ICON_PRESETS, FONT_PRESETS } from '@/lib/db';
 
 interface ConfigFormProps {
   config: Partial<MapConfig>;
@@ -13,6 +13,7 @@ export default function ConfigForm({ config: initialConfig, onSave }: ConfigForm
   const [config, setConfig] = useState(initialConfig);
   const [showTilePicker, setShowTilePicker] = useState(false);
   const [showBackgroundPicker, setShowBackgroundPicker] = useState(false);
+  const [showOverlayIconPicker, setShowOverlayIconPicker] = useState(false);
   const [customBackgrounds, setCustomBackgrounds] = useState<CustomBackground[]>([]);
   const [uploadingBackground, setUploadingBackground] = useState(false);
 
@@ -107,12 +108,192 @@ export default function ConfigForm({ config: initialConfig, onSave }: ConfigForm
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-bold text-gray-800">
-        Configuration de la carte
+        Configuration globale
       </h2>
 
       <div className="space-y-4">
+        {/* Section 1: Titles & Text */}
+        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">📝 Titres et textes</h3>
+          
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Titre de l&apos;application
+              </label>
+              <input
+                type="text"
+                value={config.app_title || ""}
+                onChange={(e) =>
+                  setConfig({ ...config, app_title: e.target.value })
+                }
+                className="water-input w-full"
+                placeholder="Eau de Paris"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Sous-titre
+              </label>
+              <input
+                type="text"
+                value={config.app_subtitle || ""}
+                onChange={(e) =>
+                  setConfig({ ...config, app_subtitle: e.target.value })
+                }
+                className="water-input w-full"
+                placeholder="Une expérience sonore et visuelle"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Section 2: Colors & Fonts */}
+        <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">🎨 Couleurs et police</h3>
+          
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Police de caractères
+              </label>
+              <select
+                value={config.font_family || "Playfair Display"}
+                onChange={(e) =>
+                  setConfig({ ...config, font_family: e.target.value })
+                }
+                className="water-input w-full"
+              >
+                {FONT_PRESETS.map((font) => (
+                  <option key={font.id} value={font.value}>
+                    {font.name} ({font.style})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Couleur principale
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={config.primary_color || "#2196f3"}
+                    onChange={(e) =>
+                      setConfig({ ...config, primary_color: e.target.value })
+                    }
+                    className="h-10 w-16 rounded border border-gray-300 cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={config.primary_color || "#2196f3"}
+                    onChange={(e) =>
+                      setConfig({ ...config, primary_color: e.target.value })
+                    }
+                    className="water-input flex-1"
+                    placeholder="#2196f3"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Couleur secondaire
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={config.secondary_color || "#1565c0"}
+                    onChange={(e) =>
+                      setConfig({ ...config, secondary_color: e.target.value })
+                    }
+                    className="h-10 w-16 rounded border border-gray-300 cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={config.secondary_color || "#1565c0"}
+                    onChange={(e) =>
+                      setConfig({ ...config, secondary_color: e.target.value })
+                    }
+                    className="water-input flex-1"
+                    placeholder="#1565c0"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 3: Loading Overlay Icon */}
+        <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">⏳ Icône de chargement</h3>
+          
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Icône pour l&apos;écran de chargement
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowOverlayIconPicker(!showOverlayIconPicker)}
+                className="text-sm text-water-dark hover:underline"
+              >
+                {showOverlayIconPicker ? "Masquer" : "Voir toutes les icônes"}
+              </button>
+            </div>
+
+            {showOverlayIconPicker && (
+              <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 mb-4 p-4 bg-white rounded-lg border border-gray-200">
+                {OVERLAY_ICON_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => {
+                      setConfig({
+                        ...config,
+                        overlay_icon: preset.icon,
+                      });
+                    }}
+                    className={`p-2 rounded-lg border-2 transition-all text-center hover:shadow-md ${
+                      config.overlay_icon === preset.icon
+                        ? "border-water-main bg-water-light shadow-md"
+                        : "border-gray-200 bg-white hover:border-water-light"
+                    }`}
+                    title={preset.name}
+                  >
+                    <div className="text-3xl">{preset.icon}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="flex items-center gap-3">
+              <div className="text-5xl p-3 bg-white rounded-lg border-2 border-gray-300">
+                {config.overlay_icon || "💧"}
+              </div>
+              <input
+                type="text"
+                value={config.overlay_icon || ""}
+                onChange={(e) =>
+                  setConfig({ ...config, overlay_icon: e.target.value })
+                }
+                className="water-input flex-1"
+                placeholder="💧"
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Choisissez une icône prédéfinie ou entrez un emoji personnalisé
+            </p>
+          </div>
+        </div>
+
         {/* Tile Layer Picker */}
-        <div>
+        <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">🗺️ Style de carte</h3>
+          <div>
           <div className="flex justify-between items-center mb-2">
             <label className="block text-sm font-medium text-gray-700">
               Style de carte
@@ -277,8 +458,14 @@ export default function ConfigForm({ config: initialConfig, onSave }: ConfigForm
             className="water-input w-full"
           />
         </div>
+        </div>
+        </div>
 
-        <div>
+        {/* Background Theme Section */}
+        <div className="p-4 bg-pink-50 rounded-lg border border-pink-200">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">🎭 Arrière-plan</h3>
+          
+          <div>
           <div className="flex justify-between items-center mb-2">
             <label className="block text-sm font-medium text-gray-700">
               Thème d&apos;arrière-plan
@@ -416,10 +603,11 @@ export default function ConfigForm({ config: initialConfig, onSave }: ConfigForm
           <p className="text-xs text-gray-500 mt-1">
             Change l&apos;arrière-plan de la page d&apos;accueil (derrière la carte)
           </p>
+          </div>
         </div>
 
-        <button onClick={handleSave} className="water-button">
-          Sauvegarder la configuration
+        <button onClick={handleSave} className="water-button w-full text-lg py-3">
+          💾 Sauvegarder la configuration
         </button>
       </div>
     </div>
