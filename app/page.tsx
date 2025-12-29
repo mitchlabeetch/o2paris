@@ -14,10 +14,37 @@ export default function Home() {
   });
 
   useEffect(() => {
-    fetch('/api/config')
-      .then(res => res.json())
-      .then(data => setConfig(data))
-      .catch(console.error);
+    const fetchConfig = () => {
+      fetch('/api/config', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      })
+        .then(res => res.json())
+        .then(data => {
+          setConfig(prevConfig => {
+            // Only update if config has actually changed
+            // Note: Using JSON.stringify for simplicity. Config objects are small
+            // and changes are infrequent, so performance impact is minimal.
+            if (JSON.stringify(prevConfig) !== JSON.stringify(data)) {
+              return data;
+            }
+            return prevConfig;
+          });
+        })
+        .catch(console.error);
+    };
+
+    // Initial fetch
+    fetchConfig();
+
+    // Poll for config changes every 5 seconds
+    // This allows admin changes to appear on live site without manual refresh.
+    // For production with high traffic, consider WebSockets or Server-Sent Events.
+    const interval = setInterval(fetchConfig, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (

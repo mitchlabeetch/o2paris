@@ -21,16 +21,46 @@ export function TileGrid() {
   const loaderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch('/api/tiles')
-      .then(res => res.json())
-      .then(data => {
-        setOriginalTiles(data);
-        // Initial load: 3 sets of data to fill screen
-        if (data.length > 0) {
-            setDisplayTiles([...data, ...data, ...data]);
-        }
+    const fetchTiles = () => {
+      fetch('/api/tiles', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
       })
-      .catch(err => console.error(err));
+        .then(res => res.json())
+        .then(data => {
+          // Ensure data is an array before setting state
+          if (Array.isArray(data) && data.length > 0) {
+            setOriginalTiles(prevOriginal => {
+              // Only update if data has actually changed
+              // Note: Using JSON.stringify for simplicity. Tile arrays are moderate size
+              // and changes are infrequent, so performance impact is minimal.
+              if (JSON.stringify(prevOriginal) !== JSON.stringify(data)) {
+                // Reset display tiles when original tiles change
+                setDisplayTiles(data);
+                return data;
+              }
+              return prevOriginal;
+            });
+          } else if (Array.isArray(data) && data.length === 0) {
+            // Empty array is valid
+            setOriginalTiles([]);
+            setDisplayTiles([]);
+          }
+        })
+        .catch(err => console.error('Error fetching tiles:', err));
+    };
+
+    // Initial fetch
+    fetchTiles();
+
+    // Poll for tile changes every 5 seconds
+    // This allows admin changes to appear on live site without manual refresh.
+    // For production with high traffic, consider WebSockets or Server-Sent Events.
+    const interval = setInterval(fetchTiles, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Infinite Scroll Logic
@@ -56,7 +86,7 @@ export function TileGrid() {
 
   // Handle modal navigation (cyclical)
   const handleNext = () => {
-    if (selectedId === null) return;
+    if (selectedId === null || !Array.isArray(originalTiles) || originalTiles.length === 0) return;
     const currentIndex = originalTiles.findIndex(t => t.id === selectedId);
     if (currentIndex === -1) return;
     const nextIndex = (currentIndex + 1) % originalTiles.length;
@@ -64,14 +94,14 @@ export function TileGrid() {
   };
 
   const handlePrev = () => {
-    if (selectedId === null) return;
+    if (selectedId === null || !Array.isArray(originalTiles) || originalTiles.length === 0) return;
     const currentIndex = originalTiles.findIndex(t => t.id === selectedId);
     if (currentIndex === -1) return;
     const prevIndex = (currentIndex - 1 + originalTiles.length) % originalTiles.length;
     setSelectedId(originalTiles[prevIndex].id);
   };
 
-  const selectedTile = originalTiles.find(t => t.id === selectedId);
+  const selectedTile = Array.isArray(originalTiles) ? originalTiles.find(t => t.id === selectedId) : undefined;
 
   return (
     <div className="container mx-auto px-4 py-8">
