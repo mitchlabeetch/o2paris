@@ -23,7 +23,7 @@ const SEED_TILES = [
     title: 'Montmartre le matin',
     description: "Le calme avant la tempête touristique, les pavés luisants de rosée et l'odeur du pain frais.",
     sound_url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_243a828eed.mp3?filename=small-river-in-forest-loop-116199.mp3',
-    image_url: 'https://images.unsplash.com/photo-1541628951107-e9e13d4b62f7?q=80&w=2168&auto=format&fit=crop',
+    image_url: 'https://images.unsplash.com/photo-1550951298-5c7b95a66b6a?q=80&w=2070&auto=format&fit=crop',
     display_order: 2,
     style_config: JSON.stringify({ font: 'Lato', color: '#f0f0f0' })
   },
@@ -31,7 +31,7 @@ const SEED_TILES = [
     title: 'Jardin du Luxembourg',
     description: "Les chaises vertes emblématiques, les voiliers sur le bassin et les enfants qui jouent.",
     sound_url: 'https://cdn.pixabay.com/download/audio/2023/03/12/audio_b998ccfe80.mp3?filename=fountain-ambient-143925.mp3',
-    image_url: 'https://images.unsplash.com/photo-1550340499-a6c6088e6619?q=80&w=2070&auto=format&fit=crop',
+    image_url: 'https://images.unsplash.com/photo-1597920364947-0e67272847d0?q=80&w=2070&auto=format&fit=crop',
     display_order: 3,
     style_config: JSON.stringify({ font: 'Playfair Display', color: '#ffffff' })
   },
@@ -47,7 +47,7 @@ const SEED_TILES = [
     title: 'Pont Alexandre III',
     description: "Dorures, statues et vue imprenable sur la Tour Eiffel et les Invalides.",
     sound_url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_243a828eed.mp3?filename=small-river-in-forest-loop-116199.mp3',
-    image_url: 'https://images.unsplash.com/photo-1499856871940-a09627c6dcf6?q=80&w=2067&auto=format&fit=crop',
+    image_url: 'https://images.unsplash.com/photo-1549144511-f099e7739427?q=80&w=2070&auto=format&fit=crop',
     display_order: 5,
     style_config: JSON.stringify({ font: 'Playfair Display', color: '#ffffff' })
   },
@@ -55,7 +55,7 @@ const SEED_TILES = [
     title: 'Le Marais',
     description: "Ruelles étroites, boutiques branchées et architecture médiévale préservée.",
     sound_url: 'https://cdn.pixabay.com/download/audio/2023/03/12/audio_b998ccfe80.mp3?filename=fountain-ambient-143925.mp3',
-    image_url: 'https://images.unsplash.com/photo-1558450130-97eb3ae4d16d?q=80&w=2070&auto=format&fit=crop',
+    image_url: 'https://images.unsplash.com/photo-1509439581779-6298f75bf6e5?q=80&w=2070&auto=format&fit=crop',
     display_order: 6,
     style_config: JSON.stringify({ font: 'Lato', color: '#f0f0f0' })
   },
@@ -79,7 +79,7 @@ const SEED_TILES = [
     title: 'Bibliothèque Sainte-Geneviève',
     description: "Le silence studieux et la lumière douce des lampes vertes sur les longues tables.",
     sound_url: 'https://cdn.pixabay.com/download/audio/2023/03/12/audio_b998ccfe80.mp3?filename=fountain-ambient-143925.mp3',
-    image_url: 'https://images.unsplash.com/photo-1594132474996-e17036c61556?q=80&w=2070&auto=format&fit=crop',
+    image_url: 'https://images.unsplash.com/photo-1548705085-101177834f47?q=80&w=2070&auto=format&fit=crop',
     display_order: 9,
     style_config: JSON.stringify({ font: 'Playfair Display', color: '#ffffff' })
   },
@@ -87,7 +87,7 @@ const SEED_TILES = [
     title: 'Metro Parisien',
     description: "Le style Art Nouveau des entrées, le carrelage blanc et le rythme de la ville.",
     sound_url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_76b4b38183.mp3?filename=water-nature.wav',
-    image_url: 'https://images.unsplash.com/photo-1563721051513-e71e3b5e4d2a?q=80&w=2070&auto=format&fit=crop',
+    image_url: 'https://images.unsplash.com/photo-1565012543-057d2949709f?q=80&w=2070&auto=format&fit=crop',
     display_order: 10,
     style_config: JSON.stringify({ font: 'Lato', color: '#f0f0f0' })
   }
