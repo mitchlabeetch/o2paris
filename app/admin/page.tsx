@@ -5,10 +5,8 @@ import { AdminTileGrid } from '@/components/admin/AdminTileGrid';
 import { TileForm } from '@/components/admin/TileForm';
 import LoginForm from '@/components/admin/LoginForm';
 import ConfigForm from '@/components/admin/ConfigForm';
-import PinpointList from '@/components/admin/PinpointList';
-import SoundList from '@/components/admin/SoundList';
 
-type TabType = 'tiles' | 'config' | 'sounds' | 'pinpoints';
+type TabType = 'tiles' | 'config';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -128,8 +126,6 @@ export default function AdminPage() {
   const tabs = [
     { id: 'tiles' as TabType, label: '🖼️ Tuiles', description: 'Gérer les tuiles visuelles' },
     { id: 'config' as TabType, label: '⚙️ Configuration', description: 'Personnalisation globale' },
-    { id: 'sounds' as TabType, label: '🔊 Sons', description: 'Gérer les fichiers audio' },
-    { id: 'pinpoints' as TabType, label: '📍 Points carte', description: 'Points sur la carte' },
   ];
 
   return (
@@ -199,14 +195,6 @@ export default function AdminPage() {
 
           {activeTab === 'config' && (
             <ConfigForm config={config} onSave={handleSaveConfig} />
-          )}
-
-          {activeTab === 'sounds' && (
-            <SoundList />
-          )}
-
-          {activeTab === 'pinpoints' && (
-            <PinpointList />
           )}
         </div>
 

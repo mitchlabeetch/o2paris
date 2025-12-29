@@ -293,7 +293,7 @@ export default function ConfigForm({ config: initialConfig, onSave }: ConfigForm
         {/* Tile Layer Picker */}
         <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">🗺️ Style de carte</h3>
-          <div>
+          
           <div className="flex justify-between items-center mb-2">
             <label className="block text-sm font-medium text-gray-700">
               Style de carte
@@ -350,7 +350,6 @@ export default function ConfigForm({ config: initialConfig, onSave }: ConfigForm
           <p className="text-xs text-gray-500 mt-1">
             Sélectionnez un style prédéfini ou entrez une URL personnalisée
           </p>
-        </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -459,13 +458,11 @@ export default function ConfigForm({ config: initialConfig, onSave }: ConfigForm
           />
         </div>
         </div>
-        </div>
 
         {/* Background Theme Section */}
         <div className="p-4 bg-pink-50 rounded-lg border border-pink-200">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">🎭 Arrière-plan</h3>
           
-          <div>
           <div className="flex justify-between items-center mb-2">
             <label className="block text-sm font-medium text-gray-700">
               Thème d&apos;arrière-plan
@@ -603,7 +600,6 @@ export default function ConfigForm({ config: initialConfig, onSave }: ConfigForm
           <p className="text-xs text-gray-500 mt-1">
             Change l&apos;arrière-plan de la page d&apos;accueil (derrière la carte)
           </p>
-          </div>
         </div>
 
         <button onClick={handleSave} className="water-button w-full text-lg py-3">
