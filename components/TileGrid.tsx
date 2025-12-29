@@ -30,13 +30,17 @@ export function TileGrid() {
       })
         .then(res => res.json())
         .then(data => {
-          setOriginalTiles(data);
-          // Initial load: display tiles once
-          if (data.length > 0) {
-              setDisplayTiles(data);
+          // Ensure data is an array before setting state
+          if (Array.isArray(data) && data.length > 0) {
+            setOriginalTiles(data);
+            setDisplayTiles(data);
+          } else if (Array.isArray(data) && data.length === 0) {
+            // Empty array is valid
+            setOriginalTiles([]);
+            setDisplayTiles([]);
           }
         })
-        .catch(err => console.error(err));
+        .catch(err => console.error('Error fetching tiles:', err));
     };
 
     // Initial fetch
@@ -71,7 +75,7 @@ export function TileGrid() {
 
   // Handle modal navigation (cyclical)
   const handleNext = () => {
-    if (selectedId === null) return;
+    if (selectedId === null || !Array.isArray(originalTiles) || originalTiles.length === 0) return;
     const currentIndex = originalTiles.findIndex(t => t.id === selectedId);
     if (currentIndex === -1) return;
     const nextIndex = (currentIndex + 1) % originalTiles.length;
@@ -79,14 +83,14 @@ export function TileGrid() {
   };
 
   const handlePrev = () => {
-    if (selectedId === null) return;
+    if (selectedId === null || !Array.isArray(originalTiles) || originalTiles.length === 0) return;
     const currentIndex = originalTiles.findIndex(t => t.id === selectedId);
     if (currentIndex === -1) return;
     const prevIndex = (currentIndex - 1 + originalTiles.length) % originalTiles.length;
     setSelectedId(originalTiles[prevIndex].id);
   };
 
-  const selectedTile = originalTiles.find(t => t.id === selectedId);
+  const selectedTile = Array.isArray(originalTiles) ? originalTiles.find(t => t.id === selectedId) : undefined;
 
   return (
     <div className="container mx-auto px-4 py-8">
