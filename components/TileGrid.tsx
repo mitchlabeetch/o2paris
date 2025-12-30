@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Tile } from './Tile';
 import { TileModal } from './TileModal';
 import { AnimatePresence } from 'framer-motion';
-import { shuffleArray } from '@/lib/client-utils';
+import { shuffleArrayNoDuplicates } from '@/lib/client-utils';
 
 interface TileData {
   id: number;
@@ -29,6 +29,8 @@ export function TileGrid() {
   // it would re-shuffle using stale tile data if tiles are updated via admin panel
   const originalTilesRef = useRef<TileData[]>([]);
   const isShufflingRef = useRef(false);
+  // Track the last displayed tile to prevent it from appearing at the start of next cycle
+  const lastDisplayedTileRef = useRef<TileData | undefined>(undefined);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const loaderRef = useRef<HTMLDivElement>(null);
 
@@ -49,16 +51,16 @@ export function TileGrid() {
               // Note: Using JSON.stringify for simplicity. Tile arrays are moderate size
               // and changes are infrequent, so performance impact is minimal.
               if (JSON.stringify(prevOriginal) !== JSON.stringify(data)) {
-                // Shuffle tiles once on page load and store the fixed order
-                // This order will be infinitely repeated, ensuring tiles never
-                // appear consecutively and maintaining maximum separation between
-                // duplicate appearances (the entire population between repeats)
-                const shuffled = shuffleArray(data);
+                // Shuffle tiles once on page load using enhanced algorithm
+                // that prevents consecutive duplicates
+                const shuffled = shuffleArrayNoDuplicates(data);
                 setShuffledOrder(shuffled);
                 // Display initial chunk of tiles
                 const initialChunk = shuffled.slice(0, TILES_PER_SCROLL_CHUNK);
                 setDisplayTiles(initialChunk);
                 currentIndexRef.current = TILES_PER_SCROLL_CHUNK;
+                // Track the last tile displayed to prevent duplicates at cycle boundary
+                lastDisplayedTileRef.current = initialChunk[initialChunk.length - 1];
                 originalTilesRef.current = data;
                 return data;
               }
@@ -71,6 +73,7 @@ export function TileGrid() {
             setShuffledOrder([]);
             originalTilesRef.current = [];
             currentIndexRef.current = 0;
+            lastDisplayedTileRef.current = undefined;
           }
         })
         .catch(err => console.error('Error fetching tiles:', err));
@@ -98,7 +101,7 @@ export function TileGrid() {
         // Prevent observer from firing while we're in the middle of re-shuffling
         if (first.isIntersecting && shuffledOrder.length > 0 && !isShufflingRef.current) {
           // Append more tiles by cycling through and re-shuffling when needed
-          // Re-shuffle when we complete a full cycle to ensure true randomization
+          // Enhanced to prevent consecutive duplicates at cycle boundaries
           const tilesToAdd: TileData[] = [];
           const currentIndex = currentIndexRef.current;
           
@@ -109,6 +112,9 @@ export function TileGrid() {
           }
           
           setDisplayTiles(prev => [...prev, ...tilesToAdd]);
+          
+          // Update the last displayed tile reference
+          lastDisplayedTileRef.current = tilesToAdd[tilesToAdd.length - 1];
           
           // Update current index
           const newIndex = (currentIndex + TILES_PER_SCROLL_CHUNK) % shuffledOrder.length;
@@ -123,7 +129,12 @@ export function TileGrid() {
             // Set shuffling flag to prevent race conditions
             isShufflingRef.current = true;
             currentIndexRef.current = 0;
-            setShuffledOrder(shuffleArray(originalTilesRef.current));
+            // Use enhanced shuffle that prevents the first tile of the new cycle
+            // from being the same as the last tile we just displayed
+            setShuffledOrder(shuffleArrayNoDuplicates(
+              originalTilesRef.current, 
+              lastDisplayedTileRef.current
+            ));
           } else {
             currentIndexRef.current = newIndex;
           }
