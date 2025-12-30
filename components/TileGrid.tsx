@@ -17,6 +17,8 @@ interface TileData {
 
 // Number of tiles to load per infinite scroll trigger
 const TILES_PER_SCROLL_CHUNK = 12;
+// Distance in pixels to trigger preloading before user reaches the bottom
+const SCROLL_PRELOAD_DISTANCE = '200px';
 
 export function TileGrid() {
   // sessionTiles: The full "deck" of tiles in a fixed random order for this session
@@ -45,8 +47,10 @@ export function TileGrid() {
 
         if (Array.isArray(data) && data.length > 0) {
           // Shuffle once to create the unique "Session Order"
-          // This prevents the "ABABCDCD" pattern by ensuring the sequence is [A, B, C, D] 
-          // and repeats as [A, B, C, D]... distance is always max.
+          // Fisher-Yates shuffle creates a random permutation where each tile appears
+          // exactly once. This permutation is used consistently throughout the session,
+          // preventing the "ABABCDCD" pattern and ensuring the sequence is [A, B, C, D]
+          // that repeats as [A, B, C, D]... with distance always at maximum.
           const shuffled = shuffleArray(data);
           setSessionTiles(shuffled);
 
@@ -71,6 +75,12 @@ export function TileGrid() {
 
     initTiles();
     // No polling/interval here. We want the order to be stable for the session.
+    // Dynamic tile additions/deletions: When tiles are added or deleted via admin panel,
+    // current users maintain their session order (stable UX), while new users or
+    // page refreshes will fetch the updated tile set and create a new shuffle.
+    // This approach guarantees maximum distance between tile repetitions and prevents
+    // jarring mid-session changes. If real-time updates are needed, consider listening
+    // to a custom event: window.addEventListener('tiles-updated', initTiles);
   }, []);
 
   // 2. INFINITE SCROLL: Refeed from the fixed sessionTiles
@@ -96,7 +106,7 @@ export function TileGrid() {
         }
       },
       { 
-        rootMargin: '200px', // Preload before user hits bottom
+        rootMargin: SCROLL_PRELOAD_DISTANCE, // Preload before user hits bottom
         threshold: 0.1 
       }
     );
