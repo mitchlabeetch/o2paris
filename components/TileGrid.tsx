@@ -28,6 +28,7 @@ export function TileGrid() {
   // The observer only recreates when shuffledOrder changes, so without this ref,
   // it would re-shuffle using stale tile data if tiles are updated via admin panel
   const originalTilesRef = useRef<TileData[]>([]);
+  const isShufflingRef = useRef(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const loaderRef = useRef<HTMLDivElement>(null);
 
@@ -87,10 +88,14 @@ export function TileGrid() {
 
   // Infinite Scroll Logic
   useEffect(() => {
+    // Reset shuffling flag when observer is recreated with new shuffled order
+    isShufflingRef.current = false;
+    
     const observer = new IntersectionObserver(
       (entries) => {
         const first = entries[0];
-        if (first.isIntersecting && shuffledOrder.length > 0) {
+        // Prevent observer from firing while we're in the middle of re-shuffling
+        if (first.isIntersecting && shuffledOrder.length > 0 && !isShufflingRef.current) {
           // Append more tiles by cycling through and re-shuffling when needed
           // Re-shuffle when we complete a full cycle to ensure true randomization
           const tilesToAdd: TileData[] = [];
@@ -108,14 +113,16 @@ export function TileGrid() {
           const newIndex = (currentIndex + TILES_PER_SCROLL_CHUNK) % shuffledOrder.length;
           
           // If we've completed at least one full cycle, re-shuffle for next cycle
-          // This happens when: 1) index wraps around (newIndex < currentIndex), or
-          // 2) we cycle multiple times per scroll (TILES_PER_SCROLL_CHUNK >= shuffledOrder.length)
-          // Case 2 ensures maximum randomization when there are fewer tiles than chunk size
-          const completedCycle = newIndex < currentIndex || TILES_PER_SCROLL_CHUNK >= shuffledOrder.length;
+          // Wrap-around is detected when newIndex < currentIndex
+          // Also re-shuffle if we're about to complete a cycle in this chunk
+          const willCompleteCycle = currentIndex + TILES_PER_SCROLL_CHUNK >= shuffledOrder.length;
+          const wrappedAround = newIndex < currentIndex;
           
-          if (completedCycle) {
+          if (wrappedAround || willCompleteCycle) {
+            // Set shuffling flag to prevent race conditions
+            isShufflingRef.current = true;
+            currentIndexRef.current = 0;
             setShuffledOrder(shuffleArray(originalTilesRef.current));
-            currentIndexRef.current = 0; // Reset to start of new shuffled order
           } else {
             currentIndexRef.current = newIndex;
           }
