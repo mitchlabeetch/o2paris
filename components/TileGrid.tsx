@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Tile } from './Tile';
 import { TileModal } from './TileModal';
 import { AnimatePresence } from 'framer-motion';
+import { shuffleArray } from '@/lib/client-utils';
 
 interface TileData {
   id: number;
@@ -14,9 +15,14 @@ interface TileData {
   style_config: any;
 }
 
+// Number of tiles to load per infinite scroll trigger
+// Balances smooth scrolling UX with performance
+const TILES_PER_SCROLL_CHUNK = 12;
+
 export function TileGrid() {
   const [originalTiles, setOriginalTiles] = useState<TileData[]>([]);
   const [displayTiles, setDisplayTiles] = useState<TileData[]>([]);
+  const [tilePool, setTilePool] = useState<TileData[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const loaderRef = useRef<HTMLDivElement>(null);
 
@@ -37,8 +43,13 @@ export function TileGrid() {
               // Note: Using JSON.stringify for simplicity. Tile arrays are moderate size
               // and changes are infrequent, so performance impact is minimal.
               if (JSON.stringify(prevOriginal) !== JSON.stringify(data)) {
-                // Reset display tiles when original tiles change
-                setDisplayTiles(data);
+                // Shuffle tiles once on initial load for randomization
+                const shuffled = shuffleArray(data);
+                setDisplayTiles(shuffled);
+                // Initialize tile pool with a different shuffle for infinite scroll
+                // Using a separate shuffle ensures the scrolling continuation has
+                // a different order than the initial display for maximum variety
+                setTilePool(shuffleArray(data));
                 return data;
               }
               return prevOriginal;
@@ -47,6 +58,7 @@ export function TileGrid() {
             // Empty array is valid
             setOriginalTiles([]);
             setDisplayTiles([]);
+            setTilePool([]);
           }
         })
         .catch(err => console.error('Error fetching tiles:', err));
@@ -70,7 +82,24 @@ export function TileGrid() {
         const first = entries[0];
         if (first.isIntersecting && originalTiles.length > 0) {
           // Append more tiles when bottom is reached
-          setDisplayTiles(prev => [...prev, ...originalTiles]);
+          setTilePool(prevPool => {
+            let currentPool = [...prevPool];
+            
+            // If pool is empty, refeed with shuffled original tiles
+            if (currentPool.length === 0) {
+              currentPool = shuffleArray(originalTiles);
+            }
+            
+            // Take tiles from pool and add to display
+            // Add in chunks for better performance
+            const chunkSize = Math.min(TILES_PER_SCROLL_CHUNK, currentPool.length);
+            const tilesToAdd = currentPool.slice(0, chunkSize);
+            const remainingPool = currentPool.slice(chunkSize);
+            
+            setDisplayTiles(prev => [...prev, ...tilesToAdd]);
+            
+            return remainingPool;
+          });
         }
       },
       { threshold: 0.1 }
