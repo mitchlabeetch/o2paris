@@ -89,17 +89,16 @@ export function TileGrid() {
           // Append more tiles from the fixed shuffled order
           // This cycles through the same order infinitely, ensuring tiles
           // never appear consecutively and maintaining consistent spacing
-          const chunkSize = TILES_PER_SCROLL_CHUNK;
           const tilesToAdd: TileData[] = [];
           
           // Build chunk by cycling through the shuffled order
-          for (let i = 0; i < chunkSize; i++) {
+          for (let i = 0; i < TILES_PER_SCROLL_CHUNK; i++) {
             const index = (currentIndex + i) % shuffledOrder.length;
             tilesToAdd.push(shuffledOrder[index]);
           }
           
           setDisplayTiles(prev => [...prev, ...tilesToAdd]);
-          setCurrentIndex(prev => (prev + chunkSize) % shuffledOrder.length);
+          setCurrentIndex(prev => (prev + TILES_PER_SCROLL_CHUNK) % shuffledOrder.length);
         }
       },
       { threshold: 0.1 }
