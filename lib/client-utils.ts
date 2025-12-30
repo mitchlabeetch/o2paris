@@ -42,6 +42,10 @@ export function shuffleArrayNoDuplicates<T extends { id: number }>(
 ): T[] {
   if (array.length <= 1) return [...array];
   
+  // Constants for algorithm tuning
+  const MAX_SHUFFLE_ATTEMPTS = 100; // Prevent infinite loops
+  const RESHUFFLE_INTERVAL = 10; // Re-shuffle every N attempts
+  
   // Start with standard Fisher-Yates shuffle
   let shuffled = shuffleArray(array);
   
@@ -59,10 +63,9 @@ export function shuffleArrayNoDuplicates<T extends { id: number }>(
   }
   
   // Fix any consecutive duplicates within the shuffled array
-  let maxAttempts = 100; // Prevent infinite loops
   let attempt = 0;
   
-  while (attempt < maxAttempts) {
+  while (attempt < MAX_SHUFFLE_ATTEMPTS) {
     let hasConsecutiveDuplicates = false;
     
     // Find consecutive duplicates
@@ -75,9 +78,11 @@ export function shuffleArrayNoDuplicates<T extends { id: number }>(
         let swapIndex = -1;
         for (let j = i + 2; j < shuffled.length; j++) {
           // Check that swapping won't create new consecutive duplicates
+          // After swap: shuffled[j] goes to position i+1, shuffled[i+1] goes to position j
           const wouldCreateNewDuplicate = 
-            isSameTile(shuffled[j], shuffled[i]) || 
-            (j < shuffled.length - 1 && isSameTile(shuffled[j], shuffled[i + 2]));
+            isSameTile(shuffled[j], shuffled[i]) || // shuffled[j] would be next to shuffled[i]
+            (i + 2 < shuffled.length && isSameTile(shuffled[j], shuffled[i + 2])) || // shuffled[j] would be next to shuffled[i+2]
+            (j + 1 < shuffled.length && isSameTile(shuffled[i + 1], shuffled[j + 1])); // shuffled[i+1] would be next to shuffled[j+1]
           
           if (!wouldCreateNewDuplicate) {
             swapIndex = j;
@@ -101,7 +106,7 @@ export function shuffleArrayNoDuplicates<T extends { id: number }>(
     attempt++;
     
     // If we've tried too many times, do a complete re-shuffle
-    if (attempt % 10 === 0) {
+    if (attempt % RESHUFFLE_INTERVAL === 0) {
       shuffled = shuffleArray(array);
     }
   }
