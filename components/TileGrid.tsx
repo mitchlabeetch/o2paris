@@ -24,6 +24,7 @@ export function TileGrid() {
   const [displayTiles, setDisplayTiles] = useState<TileData[]>([]);
   const [shuffledOrder, setShuffledOrder] = useState<TileData[]>([]);
   const currentIndexRef = useRef(0);
+  const originalTilesRef = useRef<TileData[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const loaderRef = useRef<HTMLDivElement>(null);
 
@@ -54,6 +55,7 @@ export function TileGrid() {
                 const initialChunk = shuffled.slice(0, TILES_PER_SCROLL_CHUNK);
                 setDisplayTiles(initialChunk);
                 currentIndexRef.current = TILES_PER_SCROLL_CHUNK;
+                originalTilesRef.current = data;
                 return data;
               }
               return prevOriginal;
@@ -89,24 +91,25 @@ export function TileGrid() {
           // Append more tiles by cycling through and re-shuffling when needed
           // Re-shuffle when we complete a full cycle to ensure true randomization
           const tilesToAdd: TileData[] = [];
+          const currentIndex = currentIndexRef.current;
           
           // Build chunk by cycling through the shuffled order
           for (let i = 0; i < TILES_PER_SCROLL_CHUNK; i++) {
-            const index = (currentIndexRef.current + i) % shuffledOrder.length;
+            const index = (currentIndex + i) % shuffledOrder.length;
             tilesToAdd.push(shuffledOrder[index]);
           }
           
           setDisplayTiles(prev => [...prev, ...tilesToAdd]);
           
           // Update current index
-          const newIndex = (currentIndexRef.current + TILES_PER_SCROLL_CHUNK) % shuffledOrder.length;
-          
-          // If we've cycled back to the beginning, re-shuffle for next cycle
-          if (newIndex < currentIndexRef.current || newIndex === 0) {
-            setShuffledOrder(shuffleArray(originalTiles));
-          }
-          
+          const newIndex = (currentIndex + TILES_PER_SCROLL_CHUNK) % shuffledOrder.length;
           currentIndexRef.current = newIndex;
+          
+          // If we've wrapped around (cycled back), re-shuffle for next cycle
+          // This happens when adding tiles would exceed the array length
+          if (currentIndex + TILES_PER_SCROLL_CHUNK >= shuffledOrder.length) {
+            setShuffledOrder(shuffleArray(originalTilesRef.current));
+          }
         }
       },
       { threshold: 0.1 }
@@ -117,7 +120,7 @@ export function TileGrid() {
     }
 
     return () => observer.disconnect();
-  }, [shuffledOrder, originalTiles]);
+  }, [shuffledOrder]);
 
 
   // Handle modal navigation (cyclical)
