@@ -66,3 +66,5 @@ https://nextjs.org/telemetry
  GET /api/config 200 in 359ms
  ✓ Compiled in 746ms (660 modules)
  GET /api/tiles 200 in 921ms
+   Reload env: .env
+ ✓ Compiled in 4.8s (1286 modules)
