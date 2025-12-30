@@ -12,6 +12,7 @@ const config: Config = {
         water: {
           light: '#E3F2FD',
           DEFAULT: '#2196F3',
+          main: '#2196F3',
           dark: '#1565C0',
           deep: '#0D47A1',
         },

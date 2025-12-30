@@ -131,6 +131,11 @@ export const BACKGROUND_PRESETS = [
   { id: 'midnight', name: 'Minuit', preview: '🌌', cssClass: 'bg-gradient-to-br from-indigo-900 via-purple-900 to-black' },
   { id: 'rose', name: 'Rose', preview: '🌹', cssClass: 'bg-gradient-to-br from-pink-200 via-rose-300 to-pink-400' },
   { id: 'mint', name: 'Menthe', preview: '🍃', cssClass: 'bg-gradient-to-br from-green-100 via-teal-200 to-cyan-300' },
+  { id: 'sunrise', name: 'Lever de soleil', preview: '🌅', cssClass: 'bg-gradient-to-br from-yellow-100 via-orange-200 to-rose-300' },
+  { id: 'vintage', name: 'Vintage', preview: '📜', cssClass: 'bg-[#f5e6d3] sepia-[.3]' },
+  { id: 'neon', name: 'Néon', preview: '🚥', cssClass: 'bg-gray-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900 via-gray-900 to-black' },
+  { id: 'mist', name: 'Brume', preview: '🌫️', cssClass: 'bg-gradient-to-b from-gray-100 via-gray-200 to-gray-300' },
+  { id: 'royal', name: 'Royal', preview: '👑', cssClass: 'bg-gradient-to-br from-indigo-800 via-purple-800 to-fuchsia-900' },
 ];
 
 // Preset tile layers with visual previews
@@ -368,6 +373,10 @@ export const FONT_PRESETS = [
   { id: 'ptsans', name: 'PT Sans', value: 'PT Sans', style: 'sans-serif' },
   { id: 'sourcesans', name: 'Source Sans Pro', value: 'Source Sans Pro', style: 'sans-serif' },
   { id: 'nunito', name: 'Nunito', value: 'Nunito', style: 'sans-serif' },
+  { id: 'cinzel', name: 'Cinzel', value: 'Cinzel', style: 'serif' },
+  { id: 'poppins', name: 'Poppins', value: 'Poppins', style: 'sans-serif' },
+  { id: 'dancing', name: 'Dancing Script', value: 'Dancing Script', style: 'cursive' },
+  { id: 'lora', name: 'Lora', value: 'Lora', style: 'serif' },
 ];
 
 export const SEED_PINPOINTS: Omit<Pinpoint, 'id' | 'created_at' | 'updated_at'>[] = [

@@ -10,93 +10,44 @@ if (!connectionString) {
 
 const sql = neon(connectionString);
 
-const SEED_TILES = [
-  {
-    title: 'Lumières de Paris',
-    description: "Une balade nocturne à travers les rues illuminées de la ville lumière. L'atmosphère est électrique et romantique.",
-    sound_url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_76b4b38183.mp3?filename=water-nature.wav',
-    image_url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=2073&auto=format&fit=crop',
-    display_order: 1,
-    style_config: JSON.stringify({ font: 'Playfair Display', color: '#ffffff' })
-  },
-  {
-    title: 'Montmartre le matin',
-    description: "Le calme avant la tempête touristique, les pavés luisants de rosée et l'odeur du pain frais.",
-    sound_url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_243a828eed.mp3?filename=small-river-in-forest-loop-116199.mp3',
-    image_url: 'https://images.unsplash.com/photo-1550951298-5c7b95a66b6a?q=80&w=2070&auto=format&fit=crop',
-    display_order: 2,
-    style_config: JSON.stringify({ font: 'Lato', color: '#f0f0f0' })
-  },
-  {
-    title: 'Jardin du Luxembourg',
-    description: "Les chaises vertes emblématiques, les voiliers sur le bassin et les enfants qui jouent.",
-    sound_url: 'https://cdn.pixabay.com/download/audio/2023/03/12/audio_b998ccfe80.mp3?filename=fountain-ambient-143925.mp3',
-    image_url: 'https://images.unsplash.com/photo-1597920364947-0e67272847d0?q=80&w=2070&auto=format&fit=crop',
-    display_order: 3,
-    style_config: JSON.stringify({ font: 'Playfair Display', color: '#ffffff' })
-  },
-  {
-    title: 'Café de Flore',
-    description: "Le brouhaha des conversations intellectuelles, le cliquetis des tasses et l'arôme du café.",
-    sound_url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_76b4b38183.mp3?filename=water-nature.wav',
-    image_url: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=2187&auto=format&fit=crop',
-    display_order: 4,
-    style_config: JSON.stringify({ font: 'Lato', color: '#ffffff' })
-  },
-  {
-    title: 'Pont Alexandre III',
-    description: "Dorures, statues et vue imprenable sur la Tour Eiffel et les Invalides.",
-    sound_url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_243a828eed.mp3?filename=small-river-in-forest-loop-116199.mp3',
-    image_url: 'https://images.unsplash.com/photo-1549144511-f099e7739427?q=80&w=2070&auto=format&fit=crop',
-    display_order: 5,
-    style_config: JSON.stringify({ font: 'Playfair Display', color: '#ffffff' })
-  },
-  {
-    title: 'Le Marais',
-    description: "Ruelles étroites, boutiques branchées et architecture médiévale préservée.",
-    sound_url: 'https://cdn.pixabay.com/download/audio/2023/03/12/audio_b998ccfe80.mp3?filename=fountain-ambient-143925.mp3',
-    image_url: 'https://images.unsplash.com/photo-1509439581779-6298f75bf6e5?q=80&w=2070&auto=format&fit=crop',
-    display_order: 6,
-    style_config: JSON.stringify({ font: 'Lato', color: '#f0f0f0' })
-  },
-  {
-    title: 'Notre Dame',
-    description: "Majestueuse et résiliente, au cœur de l'Île de la Cité.",
-    sound_url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_76b4b38183.mp3?filename=water-nature.wav',
-    image_url: 'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=2070&auto=format&fit=crop',
-    display_order: 7,
-    style_config: JSON.stringify({ font: 'Playfair Display', color: '#ffffff' })
-  },
-  {
-    title: 'Opéra Garnier',
-    description: "Opulence, velours rouge et dorures, le temple de la danse et de la musique.",
-    sound_url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_243a828eed.mp3?filename=small-river-in-forest-loop-116199.mp3',
-    image_url: 'https://images.unsplash.com/photo-1540324155974-7523202daa3f?q=80&w=2070&auto=format&fit=crop',
-    display_order: 8,
-    style_config: JSON.stringify({ font: 'Lato', color: '#ffffff' })
-  },
-  {
-    title: 'Bibliothèque Sainte-Geneviève',
-    description: "Le silence studieux et la lumière douce des lampes vertes sur les longues tables.",
-    sound_url: 'https://cdn.pixabay.com/download/audio/2023/03/12/audio_b998ccfe80.mp3?filename=fountain-ambient-143925.mp3',
-    image_url: 'https://images.unsplash.com/photo-1548705085-101177834f47?q=80&w=2070&auto=format&fit=crop',
-    display_order: 9,
-    style_config: JSON.stringify({ font: 'Playfair Display', color: '#ffffff' })
-  },
-  {
-    title: 'Metro Parisien',
-    description: "Le style Art Nouveau des entrées, le carrelage blanc et le rythme de la ville.",
-    sound_url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_76b4b38183.mp3?filename=water-nature.wav',
-    image_url: 'https://images.unsplash.com/photo-1565012543-057d2949709f?q=80&w=2070&auto=format&fit=crop',
-    display_order: 10,
-    style_config: JSON.stringify({ font: 'Lato', color: '#f0f0f0' })
-  }
-];
+const DEFAULT_MAP_CONFIG = {
+  tile_layer_url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  center_lat: 48.8566,
+  center_lng: 2.3522,
+  zoom_level: 13,
+  max_zoom: 18,
+  min_zoom: 10,
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  background_theme: 'water',
+  app_title: 'Eau de Paris',
+  app_subtitle: 'Une expérience sonore et visuelle',
+  overlay_icon: '💧',
+  font_family: 'Playfair Display',
+  primary_color: '#2196f3',
+  secondary_color: '#1565c0',
+};
 
 async function init() {
-  console.log("Initializing DB...");
+  console.log("Initializing DB schema...");
 
-    // Create tiles table (New Photo-based Navigation)
+  try {
+    // 1. Create pinpoints table (Legacy support)
+    await sql`
+      CREATE TABLE IF NOT EXISTS pinpoints (
+        id SERIAL PRIMARY KEY,
+        latitude DECIMAL(10, 8) NOT NULL,
+        longitude DECIMAL(11, 8) NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        sound_url TEXT NOT NULL,
+        icon VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT unique_pinpoint_location_title UNIQUE (latitude, longitude, title)
+      )
+    `;
+
+    // 2. Create tiles table (New Photo-based Navigation)
     await sql`
       CREATE TABLE IF NOT EXISTS tiles (
         id SERIAL PRIMARY KEY,
@@ -111,7 +62,41 @@ async function init() {
       )
     `;
 
-    // Create images table for storing image files
+    // 3. Create map_config table
+    await sql`
+      CREATE TABLE IF NOT EXISTS map_config (
+        id SERIAL PRIMARY KEY,
+        tile_layer_url TEXT NOT NULL,
+        center_lat DECIMAL(10, 8) NOT NULL,
+        center_lng DECIMAL(11, 8) NOT NULL,
+        zoom_level INTEGER DEFAULT 13,
+        max_zoom INTEGER DEFAULT 18,
+        min_zoom INTEGER DEFAULT 10,
+        attribution TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        background_theme VARCHAR(50) DEFAULT 'water',
+        app_title VARCHAR(255) DEFAULT 'Eau de Paris',
+        app_subtitle VARCHAR(255) DEFAULT 'Une expérience sonore et visuelle',
+        overlay_icon VARCHAR(10) DEFAULT '💧',
+        font_family VARCHAR(100) DEFAULT 'Playfair Display',
+        primary_color VARCHAR(20) DEFAULT '#2196f3',
+        secondary_color VARCHAR(20) DEFAULT '#1565c0'
+      )
+    `;
+
+    // 4. Create sounds table
+    await sql`
+      CREATE TABLE IF NOT EXISTS sounds (
+        id SERIAL PRIMARY KEY,
+        filename VARCHAR(255) NOT NULL,
+        data BYTEA NOT NULL,
+        mime_type VARCHAR(100) NOT NULL,
+        size INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    // 5. Create images table
     await sql`
       CREATE TABLE IF NOT EXISTS images (
         id SERIAL PRIMARY KEY,
@@ -123,25 +108,91 @@ async function init() {
       )
     `;
 
-    // Indexes
+    // 6. Create custom_icons table
+    await sql`
+      CREATE TABLE IF NOT EXISTS custom_icons (
+        id SERIAL PRIMARY KEY,
+        filename VARCHAR(255) NOT NULL,
+        data BYTEA NOT NULL,
+        mime_type VARCHAR(100) NOT NULL,
+        size INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    // 7. Create custom_backgrounds table
+    await sql`
+      CREATE TABLE IF NOT EXISTS custom_backgrounds (
+        id SERIAL PRIMARY KEY,
+        filename VARCHAR(255) NOT NULL,
+        data BYTEA NOT NULL,
+        mime_type VARCHAR(100) NOT NULL,
+        size INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    // Create Indexes
     await sql`CREATE INDEX IF NOT EXISTS idx_tiles_order ON tiles(display_order)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_images_created ON images(created_at)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_sounds_created ON sounds(created_at)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_custom_backgrounds_created ON custom_backgrounds(created_at)`;
 
-    // Seed sample tiles when empty
-    const tilesCount = await sql`SELECT COUNT(*) as count FROM tiles`;
-    if (Number(tilesCount[0].count) === 0) {
-      console.log("Seeding tiles...");
-      for (const tile of SEED_TILES) {
-        await sql`
-          INSERT INTO tiles (title, description, sound_url, image_url, display_order, style_config)
-          VALUES (${tile.title}, ${tile.description}, ${tile.sound_url}, ${tile.image_url}, ${tile.display_order}, ${tile.style_config})
-        `;
-      }
-    } else {
-        console.log("Tiles already exist, skipping seed.");
+    // Seed map_config if empty
+    const configCount = await sql`SELECT COUNT(*) as count FROM map_config`;
+    if (Number(configCount[0].count) === 0) {
+      console.log("Seeding default map configuration...");
+      await sql`
+        INSERT INTO map_config (
+          tile_layer_url, center_lat, center_lng, zoom_level, max_zoom, min_zoom, attribution,
+          background_theme, app_title, app_subtitle, overlay_icon, font_family, primary_color, secondary_color
+        )
+        VALUES (
+          ${DEFAULT_MAP_CONFIG.tile_layer_url},
+          ${DEFAULT_MAP_CONFIG.center_lat},
+          ${DEFAULT_MAP_CONFIG.center_lng},
+          ${DEFAULT_MAP_CONFIG.zoom_level},
+          ${DEFAULT_MAP_CONFIG.max_zoom},
+          ${DEFAULT_MAP_CONFIG.min_zoom},
+          ${DEFAULT_MAP_CONFIG.attribution},
+          ${DEFAULT_MAP_CONFIG.background_theme},
+          ${DEFAULT_MAP_CONFIG.app_title},
+          ${DEFAULT_MAP_CONFIG.app_subtitle},
+          ${DEFAULT_MAP_CONFIG.overlay_icon},
+          ${DEFAULT_MAP_CONFIG.font_family},
+          ${DEFAULT_MAP_CONFIG.primary_color},
+          ${DEFAULT_MAP_CONFIG.secondary_color}
+        )
+      `;
     }
 
-    console.log("Done.");
+    // Check for missing columns in map_config (Migration helper)
+    const newColumns = ['app_title', 'app_subtitle', 'overlay_icon', 'font_family', 'primary_color', 'secondary_color', 'background_theme'];
+    for (const col of newColumns) {
+      const colCheck = await sql`
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'map_config' AND column_name = ${col}
+      `;
+
+      if (colCheck.length === 0) {
+        console.log(`Migrating: Adding column ${col} to map_config`);
+        if (col === 'app_title') await sql`ALTER TABLE map_config ADD COLUMN app_title VARCHAR(255) DEFAULT 'Eau de Paris'`;
+        else if (col === 'app_subtitle') await sql`ALTER TABLE map_config ADD COLUMN app_subtitle VARCHAR(255) DEFAULT 'Une expérience sonore et visuelle'`;
+        else if (col === 'overlay_icon') await sql`ALTER TABLE map_config ADD COLUMN overlay_icon VARCHAR(10) DEFAULT '💧'`;
+        else if (col === 'font_family') await sql`ALTER TABLE map_config ADD COLUMN font_family VARCHAR(100) DEFAULT 'Playfair Display'`;
+        else if (col === 'primary_color') await sql`ALTER TABLE map_config ADD COLUMN primary_color VARCHAR(20) DEFAULT '#2196f3'`;
+        else if (col === 'secondary_color') await sql`ALTER TABLE map_config ADD COLUMN secondary_color VARCHAR(20) DEFAULT '#1565c0'`;
+        else if (col === 'background_theme') await sql`ALTER TABLE map_config ADD COLUMN background_theme VARCHAR(50) DEFAULT 'water'`;
+      }
+    }
+
+    console.log("Schema initialization complete.");
+
+  } catch (err) {
+    console.error("Error initializing database:", err);
+    process.exit(1);
+  }
 }
 
 init();
