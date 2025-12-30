@@ -106,8 +106,20 @@ export function shuffleArrayNoDuplicates<T extends { id: number }>(
     attempt++;
     
     // If we've tried too many times, do a complete re-shuffle
+    // and re-apply the lastDisplayedTile check
     if (attempt % RESHUFFLE_INTERVAL === 0) {
       shuffled = shuffleArray(array);
+      
+      // Re-apply lastDisplayedTile check after re-shuffle
+      if (lastDisplayedTile && isSameTile(shuffled[0], lastDisplayedTile)) {
+        let swapIndex = 1;
+        while (swapIndex < shuffled.length && isSameTile(shuffled[swapIndex], lastDisplayedTile)) {
+          swapIndex++;
+        }
+        if (swapIndex < shuffled.length) {
+          [shuffled[0], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[0]];
+        }
+      }
     }
   }
   
