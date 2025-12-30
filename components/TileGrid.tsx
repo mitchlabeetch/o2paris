@@ -22,7 +22,8 @@ const TILES_PER_SCROLL_CHUNK = 12;
 export function TileGrid() {
   const [originalTiles, setOriginalTiles] = useState<TileData[]>([]);
   const [displayTiles, setDisplayTiles] = useState<TileData[]>([]);
-  const [tilePool, setTilePool] = useState<TileData[]>([]);
+  const [shuffledOrder, setShuffledOrder] = useState<TileData[]>([]);
+  const currentIndexRef = useRef(0);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const loaderRef = useRef<HTMLDivElement>(null);
 
@@ -43,13 +44,16 @@ export function TileGrid() {
               // Note: Using JSON.stringify for simplicity. Tile arrays are moderate size
               // and changes are infrequent, so performance impact is minimal.
               if (JSON.stringify(prevOriginal) !== JSON.stringify(data)) {
-                // Shuffle tiles once on initial load for randomization
+                // Shuffle tiles once on page load and store the fixed order
+                // This order will be infinitely repeated, ensuring tiles never
+                // appear consecutively and maintaining maximum separation between
+                // duplicate appearances (the entire population between repeats)
                 const shuffled = shuffleArray(data);
-                setDisplayTiles(shuffled);
-                // Initialize tile pool with a different shuffle for infinite scroll
-                // Using a separate shuffle ensures the scrolling continuation has
-                // a different order than the initial display for maximum variety
-                setTilePool(shuffleArray(data));
+                setShuffledOrder(shuffled);
+                // Display initial chunk of tiles
+                const initialChunk = shuffled.slice(0, TILES_PER_SCROLL_CHUNK);
+                setDisplayTiles(initialChunk);
+                currentIndexRef.current = TILES_PER_SCROLL_CHUNK;
                 return data;
               }
               return prevOriginal;
@@ -58,7 +62,8 @@ export function TileGrid() {
             // Empty array is valid
             setOriginalTiles([]);
             setDisplayTiles([]);
-            setTilePool([]);
+            setShuffledOrder([]);
+            currentIndexRef.current = 0;
           }
         })
         .catch(err => console.error('Error fetching tiles:', err));
@@ -80,26 +85,20 @@ export function TileGrid() {
     const observer = new IntersectionObserver(
       (entries) => {
         const first = entries[0];
-        if (first.isIntersecting && originalTiles.length > 0) {
-          // Append more tiles when bottom is reached
-          setTilePool(prevPool => {
-            let currentPool = [...prevPool];
-            
-            // If pool is empty, refeed with shuffled original tiles
-            if (currentPool.length === 0) {
-              currentPool = shuffleArray(originalTiles);
-            }
-            
-            // Take tiles from pool and add to display
-            // Add in chunks for better performance
-            const chunkSize = Math.min(TILES_PER_SCROLL_CHUNK, currentPool.length);
-            const tilesToAdd = currentPool.slice(0, chunkSize);
-            const remainingPool = currentPool.slice(chunkSize);
-            
-            setDisplayTiles(prev => [...prev, ...tilesToAdd]);
-            
-            return remainingPool;
-          });
+        if (first.isIntersecting && shuffledOrder.length > 0) {
+          // Append more tiles from the fixed shuffled order
+          // This cycles through the same order infinitely, ensuring tiles
+          // never appear consecutively and maintaining consistent spacing
+          const tilesToAdd: TileData[] = [];
+          
+          // Build chunk by cycling through the shuffled order
+          for (let i = 0; i < TILES_PER_SCROLL_CHUNK; i++) {
+            const index = (currentIndexRef.current + i) % shuffledOrder.length;
+            tilesToAdd.push(shuffledOrder[index]);
+          }
+          
+          setDisplayTiles(prev => [...prev, ...tilesToAdd]);
+          currentIndexRef.current = (currentIndexRef.current + TILES_PER_SCROLL_CHUNK) % shuffledOrder.length;
         }
       },
       { threshold: 0.1 }
@@ -110,7 +109,7 @@ export function TileGrid() {
     }
 
     return () => observer.disconnect();
-  }, [originalTiles]);
+  }, [shuffledOrder]);
 
 
   // Handle modal navigation (cyclical)
