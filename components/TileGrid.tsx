@@ -103,13 +103,17 @@ export function TileGrid() {
           
           // Update current index
           const newIndex = (currentIndex + TILES_PER_SCROLL_CHUNK) % shuffledOrder.length;
-          currentIndexRef.current = newIndex;
           
-          // If we've completed a full cycle (or more), re-shuffle for next cycle
-          // We detect this by checking if adding tiles exceeds the array length
-          if (currentIndex + TILES_PER_SCROLL_CHUNK >= shuffledOrder.length) {
+          // If we've completed at least one full cycle, re-shuffle for next cycle
+          // This happens when: 1) index wraps around (newIndex < currentIndex), or
+          // 2) we cycle multiple times (TILES_PER_SCROLL_CHUNK >= shuffledOrder.length)
+          const completedCycle = newIndex < currentIndex || TILES_PER_SCROLL_CHUNK >= shuffledOrder.length;
+          
+          if (completedCycle) {
             setShuffledOrder(shuffleArray(originalTilesRef.current));
-            // Don't reset currentIndex - let it continue from newIndex in the new shuffled order
+            currentIndexRef.current = 0; // Reset to start of new shuffled order
+          } else {
+            currentIndexRef.current = newIndex;
           }
         }
       },
