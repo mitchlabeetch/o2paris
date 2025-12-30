@@ -18,3 +18,118 @@ export function shuffleArray<T>(array: T[]): T[] {
   }
   return shuffled;
 }
+
+/**
+ * Checks if two tiles are the same by comparing their IDs
+ */
+function isSameTile<T extends { id: number }>(tile1: T | undefined, tile2: T | undefined): boolean {
+  if (!tile1 || !tile2) return false;
+  return tile1.id === tile2.id;
+}
+
+/**
+ * Ensures the first tile in the shuffled array is different from lastDisplayedTile
+ * by swapping it with the first different tile found
+ */
+function ensureFirstTileDifferent<T extends { id: number }>(
+  shuffled: T[],
+  lastDisplayedTile: T | undefined
+): void {
+  if (!lastDisplayedTile || !isSameTile(shuffled[0], lastDisplayedTile)) {
+    return; // First tile is already different or no constraint
+  }
+  
+  // Find first tile that's different from lastDisplayedTile
+  let swapIndex = 1;
+  while (swapIndex < shuffled.length && isSameTile(shuffled[swapIndex], lastDisplayedTile)) {
+    swapIndex++;
+  }
+  
+  // If we found a different tile, swap it to the front
+  if (swapIndex < shuffled.length) {
+    [shuffled[0], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[0]];
+  }
+}
+
+/**
+ * Enhanced shuffle that prevents consecutive duplicate tiles
+ * Also ensures the last tile is different from lastDisplayedTile (for cycle boundaries)
+ * Uses Fisher-Yates with post-shuffle optimization to swap consecutive duplicates
+ * 
+ * @param array - Array of tiles to shuffle
+ * @param lastDisplayedTile - Optional last tile from previous cycle to avoid at the start
+ * @returns Shuffled array with no consecutive duplicates
+ */
+export function shuffleArrayNoDuplicates<T extends { id: number }>(
+  array: T[],
+  lastDisplayedTile?: T
+): T[] {
+  if (array.length <= 1) return [...array];
+  
+  // Constants for algorithm tuning
+  const MAX_SHUFFLE_ATTEMPTS = 100; // Prevent infinite loops
+  const RESHUFFLE_INTERVAL = 10; // Re-shuffle every N attempts
+  
+  // Start with standard Fisher-Yates shuffle
+  let shuffled = shuffleArray(array);
+  
+  // Ensure first tile is different from lastDisplayedTile
+  ensureFirstTileDifferent(shuffled, lastDisplayedTile);
+  
+  // Fix any consecutive duplicates within the shuffled array
+  let attempt = 0;
+  
+  while (attempt < MAX_SHUFFLE_ATTEMPTS) {
+    let hasConsecutiveDuplicates = false;
+    
+    // Find consecutive duplicates
+    for (let i = 0; i < shuffled.length - 1; i++) {
+      if (isSameTile(shuffled[i], shuffled[i + 1])) {
+        hasConsecutiveDuplicates = true;
+        
+        // Try to find a different tile to swap with shuffled[i+1]
+        // Look ahead in the array for a non-duplicate
+        let swapIndex = -1;
+        for (let j = i + 2; j < shuffled.length; j++) {
+          // Check that swapping won't create new consecutive duplicates
+          // After swap: shuffled[j] goes to position i+1, shuffled[i+1] goes to position j
+          const wouldCreateNewDuplicate = 
+            // Check position i+1 (where shuffled[j] will go):
+            isSameTile(shuffled[j], shuffled[i]) || // Would be next to shuffled[i]
+            (i + 2 < shuffled.length && isSameTile(shuffled[j], shuffled[i + 2])) || // Would be next to shuffled[i+2]
+            // Check position j (where shuffled[i+1] will go):
+            (j > 0 && isSameTile(shuffled[i + 1], shuffled[j - 1])) || // Would be next to shuffled[j-1]
+            (j + 1 < shuffled.length && isSameTile(shuffled[i + 1], shuffled[j + 1])); // Would be next to shuffled[j+1]
+          
+          if (!wouldCreateNewDuplicate) {
+            swapIndex = j;
+            break;
+          }
+        }
+        
+        // If found a good swap candidate, perform the swap
+        if (swapIndex !== -1) {
+          [shuffled[i + 1], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[i + 1]];
+          // Don't break; continue checking for more duplicates
+        }
+      }
+    }
+    
+    // If no consecutive duplicates found, we're done
+    if (!hasConsecutiveDuplicates) {
+      break;
+    }
+    
+    attempt++;
+    
+    // If we've tried too many times, do a complete re-shuffle
+    // and re-apply the lastDisplayedTile check
+    if (attempt % RESHUFFLE_INTERVAL === 0) {
+      shuffled = shuffleArray(array);
+      // Re-apply lastDisplayedTile constraint after re-shuffle
+      ensureFirstTileDifferent(shuffled, lastDisplayedTile);
+    }
+  }
+  
+  return shuffled;
+}
