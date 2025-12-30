@@ -39,10 +39,11 @@ export function TileGrid() {
               // Note: Using JSON.stringify for simplicity. Tile arrays are moderate size
               // and changes are infrequent, so performance impact is minimal.
               if (JSON.stringify(prevOriginal) !== JSON.stringify(data)) {
-                // Shuffle tiles on initial load for randomization
+                // Shuffle tiles once on initial load for randomization
                 const shuffled = shuffleArray(data);
                 setDisplayTiles(shuffled);
-                // Initialize tile pool with shuffled tiles for infinite scroll
+                // Initialize tile pool with remaining shuffled tiles for infinite scroll
+                // We use a second shuffle to ensure the continuation is also randomized
                 setTilePool(shuffleArray(data));
                 return data;
               }
@@ -85,8 +86,10 @@ export function TileGrid() {
             }
             
             // Take tiles from pool and add to display
-            const tilesToAdd = currentPool.slice(0, originalTiles.length);
-            const remainingPool = currentPool.slice(originalTiles.length);
+            // Add in chunks for better performance (12 tiles per scroll)
+            const chunkSize = Math.min(12, currentPool.length);
+            const tilesToAdd = currentPool.slice(0, chunkSize);
+            const remainingPool = currentPool.slice(chunkSize);
             
             setDisplayTiles(prev => [...prev, ...tilesToAdd]);
             
