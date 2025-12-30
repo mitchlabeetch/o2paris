@@ -1,9 +1,67 @@
 
-> o2paris@0.1.0 start
-> next start
+> o2paris@0.1.0 dev
+> next dev
 
   ▲ Next.js 14.2.35
   - Local:        http://localhost:3000
+  - Environments: .env
 
  ✓ Starting...
- ✓ Ready in 424ms
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+ ✓ Ready in 1837ms
+ ○ Compiling / ...
+ ✓ Compiled / in 9.3s (1300 modules)
+ GET / 200 in 10389ms
+ ✓ Compiled in 1058ms (660 modules)
+ ○ Compiling /api/config ...
+ ✓ Compiled /api/config in 6.5s (672 modules)
+ ✓ Compiled (674 modules)
+ GET /api/config 200 in 7432ms
+ GET /api/tiles 200 in 2409ms
+ GET /api/config 200 in 2413ms
+ GET /api/tiles 200 in 7401ms
+ GET /api/tiles 200 in 7456ms
+ GET /api/config 200 in 7410ms
+ ✓ Compiled /api/images in 187ms (676 modules)
+(node:2433) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ GET /api/images?id=4 200 in 1810ms
+ GET /api/images?id=6 200 in 2536ms
+ GET /api/images?id=2 200 in 2858ms
+ GET /api/images?id=1 200 in 2866ms
+ GET /api/images?id=5 200 in 2852ms
+ GET /api/images?id=3 200 in 3541ms
+ GET /api/images?id=10 200 in 1016ms
+ GET /api/images?id=7 200 in 644ms
+ GET /api/images?id=9 200 in 400ms
+ GET /api/tiles 200 in 141ms
+ GET /api/config 200 in 149ms
+ GET /api/images?id=8 200 in 966ms
+ GET /api/images?id=12 200 in 1077ms
+ GET /api/images?id=11 200 in 2382ms
+ GET /api/tiles 200 in 144ms
+ GET /api/config 200 in 147ms
+ GET / 200 in 187ms
+ GET /api/tiles 200 in 367ms
+ GET /api/config 200 in 359ms
+ GET /api/config 200 in 373ms
+ GET /api/tiles 200 in 368ms
+ GET /api/images?id=4 200 in 982ms
+ GET /api/images?id=2 200 in 1084ms
+ GET /api/images?id=1 200 in 1217ms
+ GET /api/images?id=9 200 in 244ms
+ GET /api/images?id=5 200 in 1401ms
+ GET /api/images?id=6 200 in 1475ms
+ GET /api/images?id=7 200 in 505ms
+ GET /api/images?id=3 200 in 1598ms
+ GET /api/images?id=8 200 in 153ms
+ GET /api/images?id=12 200 in 314ms
+ GET /api/images?id=10 200 in 452ms
+ GET /api/images?id=11 200 in 866ms
+ GET /api/tiles 200 in 356ms
+ GET /api/config 200 in 359ms
+ ✓ Compiled in 746ms (660 modules)
