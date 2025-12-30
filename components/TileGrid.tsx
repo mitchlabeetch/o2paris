@@ -15,6 +15,10 @@ interface TileData {
   style_config: any;
 }
 
+// Number of tiles to load per infinite scroll trigger
+// Balances smooth scrolling UX with performance
+const TILES_PER_SCROLL_CHUNK = 12;
+
 export function TileGrid() {
   const [originalTiles, setOriginalTiles] = useState<TileData[]>([]);
   const [displayTiles, setDisplayTiles] = useState<TileData[]>([]);
@@ -42,8 +46,9 @@ export function TileGrid() {
                 // Shuffle tiles once on initial load for randomization
                 const shuffled = shuffleArray(data);
                 setDisplayTiles(shuffled);
-                // Initialize tile pool with remaining shuffled tiles for infinite scroll
-                // We use a second shuffle to ensure the continuation is also randomized
+                // Initialize tile pool with a different shuffle for infinite scroll
+                // Using a separate shuffle ensures the scrolling continuation has
+                // a different order than the initial display for maximum variety
                 setTilePool(shuffleArray(data));
                 return data;
               }
@@ -86,8 +91,8 @@ export function TileGrid() {
             }
             
             // Take tiles from pool and add to display
-            // Add in chunks for better performance (12 tiles per scroll)
-            const chunkSize = Math.min(12, currentPool.length);
+            // Add in chunks for better performance
+            const chunkSize = Math.min(TILES_PER_SCROLL_CHUNK, currentPool.length);
             const tilesToAdd = currentPool.slice(0, chunkSize);
             const remainingPool = currentPool.slice(chunkSize);
             
