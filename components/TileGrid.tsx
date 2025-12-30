@@ -24,6 +24,11 @@ export function TileGrid() {
   const [displayTiles, setDisplayTiles] = useState<TileData[]>([]);
   const [shuffledOrder, setShuffledOrder] = useState<TileData[]>([]);
   const currentIndexRef = useRef(0);
+  // Keep originalTiles in a ref to avoid stale closure issues in the observer callback
+  // The observer only recreates when shuffledOrder changes, so without this ref,
+  // it would re-shuffle using stale tile data if tiles are updated via admin panel
+  const originalTilesRef = useRef<TileData[]>([]);
+  const isShufflingRef = useRef(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const loaderRef = useRef<HTMLDivElement>(null);
 
@@ -54,6 +59,7 @@ export function TileGrid() {
                 const initialChunk = shuffled.slice(0, TILES_PER_SCROLL_CHUNK);
                 setDisplayTiles(initialChunk);
                 currentIndexRef.current = TILES_PER_SCROLL_CHUNK;
+                originalTilesRef.current = data;
                 return data;
               }
               return prevOriginal;
@@ -63,6 +69,7 @@ export function TileGrid() {
             setOriginalTiles([]);
             setDisplayTiles([]);
             setShuffledOrder([]);
+            originalTilesRef.current = [];
             currentIndexRef.current = 0;
           }
         })
@@ -82,23 +89,44 @@ export function TileGrid() {
 
   // Infinite Scroll Logic
   useEffect(() => {
+    // Reset shuffling flag when observer is recreated with new shuffled order
+    isShufflingRef.current = false;
+    
     const observer = new IntersectionObserver(
       (entries) => {
         const first = entries[0];
-        if (first.isIntersecting && shuffledOrder.length > 0) {
-          // Append more tiles from the fixed shuffled order
-          // This cycles through the same order infinitely, ensuring tiles
-          // never appear consecutively and maintaining consistent spacing
+        // Prevent observer from firing while we're in the middle of re-shuffling
+        if (first.isIntersecting && shuffledOrder.length > 0 && !isShufflingRef.current) {
+          // Append more tiles by cycling through and re-shuffling when needed
+          // Re-shuffle when we complete a full cycle to ensure true randomization
           const tilesToAdd: TileData[] = [];
+          const currentIndex = currentIndexRef.current;
           
           // Build chunk by cycling through the shuffled order
           for (let i = 0; i < TILES_PER_SCROLL_CHUNK; i++) {
-            const index = (currentIndexRef.current + i) % shuffledOrder.length;
+            const index = (currentIndex + i) % shuffledOrder.length;
             tilesToAdd.push(shuffledOrder[index]);
           }
           
           setDisplayTiles(prev => [...prev, ...tilesToAdd]);
-          currentIndexRef.current = (currentIndexRef.current + TILES_PER_SCROLL_CHUNK) % shuffledOrder.length;
+          
+          // Update current index
+          const newIndex = (currentIndex + TILES_PER_SCROLL_CHUNK) % shuffledOrder.length;
+          
+          // If we've completed at least one full cycle, re-shuffle for next cycle
+          // Wrap-around is detected when newIndex < currentIndex
+          // Also re-shuffle if we're about to complete a cycle in this chunk
+          const willCompleteCycle = currentIndex + TILES_PER_SCROLL_CHUNK >= shuffledOrder.length;
+          const wrappedAround = newIndex < currentIndex;
+          
+          if (wrappedAround || willCompleteCycle) {
+            // Set shuffling flag to prevent race conditions
+            isShufflingRef.current = true;
+            currentIndexRef.current = 0;
+            setShuffledOrder(shuffleArray(originalTilesRef.current));
+          } else {
+            currentIndexRef.current = newIndex;
+          }
         }
       },
       { threshold: 0.1 }
