@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Tile } from './Tile';
 import { TileModal } from './TileModal';
 import { AnimatePresence } from 'framer-motion';
-import { shuffleArrayNoDuplicates } from '@/lib/client-utils';
+import { shuffleArray } from '@/lib/client-utils';
 
 interface TileData {
   id: number;
@@ -16,131 +16,89 @@ interface TileData {
 }
 
 // Number of tiles to load per infinite scroll trigger
-// Balances smooth scrolling UX with performance
 const TILES_PER_SCROLL_CHUNK = 12;
 
 export function TileGrid() {
-  const [originalTiles, setOriginalTiles] = useState<TileData[]>([]);
+  // sessionTiles: The full "deck" of tiles in a fixed random order for this session
+  const [sessionTiles, setSessionTiles] = useState<TileData[]>([]);
+  // displayTiles: The subset of tiles currently rendered on screen
   const [displayTiles, setDisplayTiles] = useState<TileData[]>([]);
-  const [shuffledOrder, setShuffledOrder] = useState<TileData[]>([]);
+  
+  // Tracks the absolute position in the infinite cycle
   const currentIndexRef = useRef(0);
-  // Keep originalTiles in a ref to avoid stale closure issues in the observer callback
-  // The observer only recreates when shuffledOrder changes, so without this ref,
-  // it would re-shuffle using stale tile data if tiles are updated via admin panel
-  const originalTilesRef = useRef<TileData[]>([]);
-  const isShufflingRef = useRef(false);
-  // Track the last displayed tile to prevent it from appearing at the start of next cycle
-  const lastDisplayedTileRef = useRef<TileData | undefined>(undefined);
+  
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const loaderRef = useRef<HTMLDivElement>(null);
 
+  // 1. INITIALIZATION: Fetch all tiles & Shuffle once
   useEffect(() => {
-    const fetchTiles = () => {
-      fetch('/api/tiles', {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache',
-        },
-      })
-        .then(res => res.json())
-        .then(data => {
-          // Ensure data is an array before setting state
-          if (Array.isArray(data) && data.length > 0) {
-            setOriginalTiles(prevOriginal => {
-              // Only update if data has actually changed
-              // Note: Using JSON.stringify for simplicity. Tile arrays are moderate size
-              // and changes are infrequent, so performance impact is minimal.
-              if (JSON.stringify(prevOriginal) !== JSON.stringify(data)) {
-                // Shuffle tiles once on page load using enhanced algorithm
-                // that prevents consecutive duplicates
-                const shuffled = shuffleArrayNoDuplicates(data);
-                setShuffledOrder(shuffled);
-                // Display initial chunk of tiles
-                const initialChunk = shuffled.slice(0, TILES_PER_SCROLL_CHUNK);
-                setDisplayTiles(initialChunk);
-                currentIndexRef.current = TILES_PER_SCROLL_CHUNK;
-                // Track the last tile displayed to prevent duplicates at cycle boundary
-                lastDisplayedTileRef.current = initialChunk[initialChunk.length - 1];
-                originalTilesRef.current = data;
-                return data;
-              }
-              return prevOriginal;
-            });
-          } else if (Array.isArray(data) && data.length === 0) {
-            // Empty array is valid
-            setOriginalTiles([]);
-            setDisplayTiles([]);
-            setShuffledOrder([]);
-            originalTilesRef.current = [];
-            currentIndexRef.current = 0;
-            lastDisplayedTileRef.current = undefined;
+    const initTiles = async () => {
+      try {
+        const res = await fetch('/api/tiles', {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' },
+        });
+        
+        if (!res.ok) throw new Error('Failed to fetch tiles');
+        
+        const data = await res.json();
+
+        if (Array.isArray(data) && data.length > 0) {
+          // Shuffle once to create the unique "Session Order"
+          // This prevents the "ABABCDCD" pattern by ensuring the sequence is [A, B, C, D] 
+          // and repeats as [A, B, C, D]... distance is always max.
+          const shuffled = shuffleArray(data);
+          setSessionTiles(shuffled);
+
+          // Initial Render: Load the first chunk immediately
+          // Handle case where total tiles < chunk size by looping immediately if needed
+          const initialTiles: TileData[] = [];
+          for (let i = 0; i < TILES_PER_SCROLL_CHUNK; i++) {
+            // Use modulo to wrap around if we have fewer than 12 tiles total
+            initialTiles.push(shuffled[i % shuffled.length]);
           }
-        })
-        .catch(err => console.error('Error fetching tiles:', err));
+          
+          setDisplayTiles(initialTiles);
+          currentIndexRef.current = TILES_PER_SCROLL_CHUNK;
+        } else {
+          setSessionTiles([]);
+          setDisplayTiles([]);
+        }
+      } catch (err) {
+        console.error('Error loading tiles:', err);
+      }
     };
 
-    // Initial fetch
-    fetchTiles();
-
-    // Poll for tile changes every 5 seconds
-    // This allows admin changes to appear on live site without manual refresh.
-    // For production with high traffic, consider WebSockets or Server-Sent Events.
-    const interval = setInterval(fetchTiles, 5000);
-
-    return () => clearInterval(interval);
+    initTiles();
+    // No polling/interval here. We want the order to be stable for the session.
   }, []);
 
-  // Infinite Scroll Logic
+  // 2. INFINITE SCROLL: Refeed from the fixed sessionTiles
   useEffect(() => {
-    // Reset shuffling flag when observer is recreated with new shuffled order
-    isShufflingRef.current = false;
-    
     const observer = new IntersectionObserver(
       (entries) => {
-        const first = entries[0];
-        // Prevent observer from firing while we're in the middle of re-shuffling
-        if (first.isIntersecting && shuffledOrder.length > 0 && !isShufflingRef.current) {
-          // Append more tiles by cycling through and re-shuffling when needed
-          // Enhanced to prevent consecutive duplicates at cycle boundaries
-          const tilesToAdd: TileData[] = [];
-          const currentIndex = currentIndexRef.current;
+        const target = entries[0];
+        // Only load more if we have a valid session order established
+        if (target.isIntersecting && sessionTiles.length > 0) {
           
-          // Build chunk by cycling through the shuffled order
+          const nextChunk: TileData[] = [];
+          
+          // Calculate the next chunk based on the fixed session order
+          // This ensures we continue the exact sequence: ... -> End -> Start -> ...
           for (let i = 0; i < TILES_PER_SCROLL_CHUNK; i++) {
-            const index = (currentIndex + i) % shuffledOrder.length;
-            tilesToAdd.push(shuffledOrder[index]);
+            const absoluteIndex = currentIndexRef.current + i;
+            const wrappedIndex = absoluteIndex % sessionTiles.length;
+            nextChunk.push(sessionTiles[wrappedIndex]);
           }
-          
-          setDisplayTiles(prev => [...prev, ...tilesToAdd]);
-          
-          // Update the last displayed tile reference
-          lastDisplayedTileRef.current = tilesToAdd[tilesToAdd.length - 1];
-          
-          // Update current index
-          const newIndex = (currentIndex + TILES_PER_SCROLL_CHUNK) % shuffledOrder.length;
-          
-          // If we've completed at least one full cycle, re-shuffle for next cycle
-          // Wrap-around is detected when newIndex < currentIndex
-          // Also re-shuffle if we're about to complete a cycle in this chunk
-          const willCompleteCycle = currentIndex + TILES_PER_SCROLL_CHUNK >= shuffledOrder.length;
-          const wrappedAround = newIndex < currentIndex;
-          
-          if (wrappedAround || willCompleteCycle) {
-            // Set shuffling flag to prevent race conditions
-            isShufflingRef.current = true;
-            currentIndexRef.current = 0;
-            // Use enhanced shuffle that prevents the first tile of the new cycle
-            // from being the same as the last tile we just displayed
-            setShuffledOrder(shuffleArrayNoDuplicates(
-              originalTilesRef.current, 
-              lastDisplayedTileRef.current
-            ));
-          } else {
-            currentIndexRef.current = newIndex;
-          }
+
+          setDisplayTiles((prev) => [...prev, ...nextChunk]);
+          currentIndexRef.current += TILES_PER_SCROLL_CHUNK;
         }
       },
-      { threshold: 0.1 }
+      { 
+        rootMargin: '200px', // Preload before user hits bottom
+        threshold: 0.1 
+      }
     );
 
     if (loaderRef.current) {
@@ -148,35 +106,37 @@ export function TileGrid() {
     }
 
     return () => observer.disconnect();
-  }, [shuffledOrder]);
+  }, [sessionTiles]); // Re-create observer only when the session "deck" is ready
 
-
-  // Handle modal navigation (cyclical)
+  // Navigation Logic (Cyclical)
+  // Uses sessionTiles to find the 'true' next/prev in the logical random order
   const handleNext = () => {
-    if (selectedId === null || !Array.isArray(originalTiles) || originalTiles.length === 0) return;
-    const currentIndex = originalTiles.findIndex(t => t.id === selectedId);
-    if (currentIndex === -1) return;
-    const nextIndex = (currentIndex + 1) % originalTiles.length;
-    setSelectedId(originalTiles[nextIndex].id);
+    if (selectedId === null || sessionTiles.length === 0) return;
+    const currentSessionIndex = sessionTiles.findIndex(t => t.id === selectedId);
+    if (currentSessionIndex === -1) return;
+    
+    const nextIndex = (currentSessionIndex + 1) % sessionTiles.length;
+    setSelectedId(sessionTiles[nextIndex].id);
   };
 
   const handlePrev = () => {
-    if (selectedId === null || !Array.isArray(originalTiles) || originalTiles.length === 0) return;
-    const currentIndex = originalTiles.findIndex(t => t.id === selectedId);
-    if (currentIndex === -1) return;
-    const prevIndex = (currentIndex - 1 + originalTiles.length) % originalTiles.length;
-    setSelectedId(originalTiles[prevIndex].id);
+    if (selectedId === null || sessionTiles.length === 0) return;
+    const currentSessionIndex = sessionTiles.findIndex(t => t.id === selectedId);
+    if (currentSessionIndex === -1) return;
+    
+    const prevIndex = (currentSessionIndex - 1 + sessionTiles.length) % sessionTiles.length;
+    setSelectedId(sessionTiles[prevIndex].id);
   };
 
-  const selectedTile = Array.isArray(originalTiles) ? originalTiles.find(t => t.id === selectedId) : undefined;
+  const selectedTile = sessionTiles.find(t => t.id === selectedId);
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Masonry Layout using CSS Columns */}
+      {/* Masonry Layout */}
       <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
         {displayTiles.map((tile, index) => (
           <Tile
-            // Use index in key to allow duplicates
+            // Use index in key to allow duplicates (same tile appearing multiple times in infinite scroll)
             key={`${tile.id}-${index}`}
             {...tile}
             onClick={() => setSelectedId(tile.id)}
@@ -196,9 +156,11 @@ export function TileGrid() {
       </AnimatePresence>
 
       {/* Infinite Scroll Trigger */}
-      <div ref={loaderRef} className="h-20 flex items-center justify-center text-gray-400 opacity-50">
-        <span className="animate-spin text-2xl">∞</span>
-      </div>
+      {sessionTiles.length > 0 && (
+        <div ref={loaderRef} className="h-24 flex items-center justify-center text-water-main/30">
+          <span className="animate-spin text-3xl">∞</span>
+        </div>
+      )}
     </div>
   );
 }
