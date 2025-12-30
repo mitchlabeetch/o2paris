@@ -69,6 +69,7 @@ export function TileGrid() {
             setOriginalTiles([]);
             setDisplayTiles([]);
             setShuffledOrder([]);
+            originalTilesRef.current = [];
             currentIndexRef.current = 0;
           }
         })
