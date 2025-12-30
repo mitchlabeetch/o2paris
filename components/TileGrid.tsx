@@ -24,6 +24,9 @@ export function TileGrid() {
   const [displayTiles, setDisplayTiles] = useState<TileData[]>([]);
   const [shuffledOrder, setShuffledOrder] = useState<TileData[]>([]);
   const currentIndexRef = useRef(0);
+  // Keep originalTiles in a ref to avoid stale closure issues in the observer callback
+  // The observer only recreates when shuffledOrder changes, so without this ref,
+  // it would re-shuffle using stale tile data if tiles are updated via admin panel
   const originalTilesRef = useRef<TileData[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const loaderRef = useRef<HTMLDivElement>(null);
@@ -106,7 +109,8 @@ export function TileGrid() {
           
           // If we've completed at least one full cycle, re-shuffle for next cycle
           // This happens when: 1) index wraps around (newIndex < currentIndex), or
-          // 2) we cycle multiple times (TILES_PER_SCROLL_CHUNK >= shuffledOrder.length)
+          // 2) we cycle multiple times per scroll (TILES_PER_SCROLL_CHUNK >= shuffledOrder.length)
+          // Case 2 ensures maximum randomization when there are fewer tiles than chunk size
           const completedCycle = newIndex < currentIndex || TILES_PER_SCROLL_CHUNK >= shuffledOrder.length;
           
           if (completedCycle) {
