@@ -86,9 +86,8 @@ export function TileGrid() {
       (entries) => {
         const first = entries[0];
         if (first.isIntersecting && shuffledOrder.length > 0) {
-          // Append more tiles from the fixed shuffled order
-          // This cycles through the same order infinitely, ensuring tiles
-          // never appear consecutively and maintaining consistent spacing
+          // Append more tiles by cycling through and re-shuffling when needed
+          // Re-shuffle when we complete a full cycle to ensure true randomization
           const tilesToAdd: TileData[] = [];
           
           // Build chunk by cycling through the shuffled order
@@ -98,7 +97,16 @@ export function TileGrid() {
           }
           
           setDisplayTiles(prev => [...prev, ...tilesToAdd]);
-          currentIndexRef.current = (currentIndexRef.current + TILES_PER_SCROLL_CHUNK) % shuffledOrder.length;
+          
+          // Update current index
+          const newIndex = (currentIndexRef.current + TILES_PER_SCROLL_CHUNK) % shuffledOrder.length;
+          
+          // If we've cycled back to the beginning, re-shuffle for next cycle
+          if (newIndex < currentIndexRef.current || newIndex === 0) {
+            setShuffledOrder(shuffleArray(originalTiles));
+          }
+          
+          currentIndexRef.current = newIndex;
         }
       },
       { threshold: 0.1 }
@@ -109,7 +117,7 @@ export function TileGrid() {
     }
 
     return () => observer.disconnect();
-  }, [shuffledOrder]);
+  }, [shuffledOrder, originalTiles]);
 
 
   // Handle modal navigation (cyclical)
