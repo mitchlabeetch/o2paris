@@ -23,7 +23,7 @@ export function TileGrid() {
   const [originalTiles, setOriginalTiles] = useState<TileData[]>([]);
   const [displayTiles, setDisplayTiles] = useState<TileData[]>([]);
   const [shuffledOrder, setShuffledOrder] = useState<TileData[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const currentIndexRef = useRef(0);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const loaderRef = useRef<HTMLDivElement>(null);
 
@@ -53,7 +53,7 @@ export function TileGrid() {
                 // Display initial chunk of tiles
                 const initialChunk = shuffled.slice(0, TILES_PER_SCROLL_CHUNK);
                 setDisplayTiles(initialChunk);
-                setCurrentIndex(TILES_PER_SCROLL_CHUNK);
+                currentIndexRef.current = TILES_PER_SCROLL_CHUNK;
                 return data;
               }
               return prevOriginal;
@@ -63,7 +63,7 @@ export function TileGrid() {
             setOriginalTiles([]);
             setDisplayTiles([]);
             setShuffledOrder([]);
-            setCurrentIndex(0);
+            currentIndexRef.current = 0;
           }
         })
         .catch(err => console.error('Error fetching tiles:', err));
@@ -93,12 +93,12 @@ export function TileGrid() {
           
           // Build chunk by cycling through the shuffled order
           for (let i = 0; i < TILES_PER_SCROLL_CHUNK; i++) {
-            const index = (currentIndex + i) % shuffledOrder.length;
+            const index = (currentIndexRef.current + i) % shuffledOrder.length;
             tilesToAdd.push(shuffledOrder[index]);
           }
           
           setDisplayTiles(prev => [...prev, ...tilesToAdd]);
-          setCurrentIndex(prev => (prev + TILES_PER_SCROLL_CHUNK) % shuffledOrder.length);
+          currentIndexRef.current = (currentIndexRef.current + TILES_PER_SCROLL_CHUNK) % shuffledOrder.length;
         }
       },
       { threshold: 0.1 }
@@ -109,7 +109,7 @@ export function TileGrid() {
     }
 
     return () => observer.disconnect();
-  }, [shuffledOrder, currentIndex]);
+  }, [shuffledOrder]);
 
 
   // Handle modal navigation (cyclical)
