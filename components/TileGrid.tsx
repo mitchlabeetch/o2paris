@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Tile } from './Tile';
 import { TileModal } from './TileModal';
 import { AnimatePresence } from 'framer-motion';
-import { shuffleArray } from '@/lib/client-utils';
+import { shuffleArrayNoDuplicates } from '@/lib/client-utils';
 
 interface TileData {
   id: number;
@@ -47,11 +47,13 @@ export function TileGrid() {
 
         if (Array.isArray(data) && data.length > 0) {
           // Shuffle once to create the unique "Session Order"
-          // Fisher-Yates shuffle creates a random permutation where each tile appears
-          // exactly once. This permutation is used consistently throughout the session,
-          // preventing the "ABABCDCD" pattern and ensuring the sequence is [A, B, C, D]
-          // that repeats as [A, B, C, D]... with distance always at maximum.
-          const shuffled = shuffleArray(data);
+          // We use shuffleArrayNoDuplicates to prevent adjacent tiles from having the same image
+          // This addresses the issue where "similar tiles" appear next to each other.
+          // The session order is looped for infinite scrolling.
+          const shuffled = shuffleArrayNoDuplicates(
+            data,
+            (a, b) => a.image_url === b.image_url
+          );
           setSessionTiles(shuffled);
 
           // Initial Render: Load the first chunk immediately
