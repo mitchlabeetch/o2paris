@@ -14,7 +14,7 @@ Ici, nous codons avec des outils forgés par les dieux et déesses de la Tech qu
 
 Avant de comprendre *où* sont les choses, il faut comprendre *en quoi* elles sont écrites.
 
-### Petite leçon d'Histoire (Pour les Moldus)
+### Un peu d'Histoire
 
 Pour faire un site internet, les Ancien.ne.s utilisaient trois parchemins séparés. C'est la base de tout le webnetofthetoile, et c'est important de le savoir pour comprendre pourquoi nous, nous faisons différemment.
 
@@ -52,7 +52,7 @@ Nous n'allons pas à la bataille les mains vides. Voici les armes légendaires q
 
 ---
 
-## 3. Vue d'Ensemble : La Carte du Monde
+## 3. Vue d'Ensemble
 
 Voici le tour du propriétaire, fichier par fichier. J'ai dépoussiéré chaque recoin pour toi.
 
