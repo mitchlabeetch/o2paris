@@ -1,4 +1,4 @@
-# Guide du Grimoire Numérique pour Raymerique
+# Guide du Grimoire Numérique
 
 **Par Meetch, la Cavalière Dorée, la Tourte des Cieux, le Cygne du Vent.**
 
@@ -6,24 +6,24 @@ CC Raymerique
 
 Si tu lis ces lignes, c'est que tu as bravé les tempêtes pour t'aventurer dans les entrailles de **O2 Paris**. Ça tombe mal, j'ai un peu envie d'écrire des bêtises. Oui, c'est un nom nul aussi mais en fait tant pis
 
-Ici, nous ne codons pas avec des pierres et des bâtons, mais avec des outils forgés par les dieu et de la Tech. Laisse-moi t'expliquer comment tout cela tient debout.
+Ici, nous codons avec des outils forgés par les dieux et déesses de la Tech qui vivent en Suisse et ont plus de talent que nous. Laisse-moi t'expliquer comment tout cela tient debout.
 
 ---
 
-## 1. Les Langages : L'Alphabet des Dieux
+## 1. Les Langages : L'Alphabet
 
 Avant de comprendre *où* sont les choses, il faut comprendre *en quoi* elles sont écrites.
 
 ### Petite leçon d'Histoire (Pour les Moldus)
 
-Pour faire un site internet, les anciens utilisaient trois parchemins séparés. C'est la base de tout le web, et c'est important de le savoir pour comprendre pourquoi nous, nous faisons différemment.
+Pour faire un site internet, les Ancien.ne.s utilisaient trois parchemins séparés. C'est la base de tout le webnetofthetoile, et c'est important de le savoir pour comprendre pourquoi nous, nous faisons différemment.
 
 *   **HTML (Le Squelette) :** C'est la structure. "Ici, je veux un titre", "Là, une image", "Là, un paragraphe". Sans lui, la page est vide. Mais le HTML est bête : il est statique, il ne bouge pas.
 *   **CSS (Le Costume) :** C'est la beauté. "Ce titre doit être rouge", "Cette image doit être ronde". Sans lui, le web serait triste et moche (comme en 1995).
 *   **JavaScript (Le Cerveau) :** C'est l'action. "Si je clique ici, ouvre une fenêtre", "Si je descends la page, charge d'autres images". Sans lui, la page est inerte comme une statue.
 
 **Pourquoi on ne fait plus juste ça ?**
-Parce que quand le site devient énorme (comme le nôtre), gérer ces trois fichiers séparément devient un cauchemar. Imagine devoir changer le nom d'un bouton dans le HTML, sa couleur dans le CSS, et son action dans le JS... trois fichiers à ouvrir pour une seule modif !
+Parce que quand le site mange sa soupe et devient grand (comme le nôtre), gérer ces trois fichiers séparément devient un cauchemar : devoir changer le nom d'un bouton dans le HTML, sa couleur dans le CSS, et son action dans le JS...
 
 C'est là qu'interviennent nos outils modernes :
 
@@ -35,7 +35,7 @@ C'est là qu'interviennent nos outils modernes :
 | **JSX** (`.tsx`) | **HTML + JavaScript mélangés.** C'est du HTML déguisé en JS. | Au lieu de séparer squelette et cerveau, on écrit les deux ensemble. On peut dire : `<h1>Bonjour {nom_utilisateur}</h1>`. C'est ultra-puissant pour créer des pages dynamiques. |
 | **Tailwind CSS** | **CSS direct.** Au lieu d'écrire du CSS dans un fichier à part, on met le style directement sur l'élément HTML. | On écrit `<div class="bg-red-500">`. C'est fini de chercher dans 15 fichiers CSS pourquoi ce bouton n'est pas rouge. Tout est sous tes yeux. |
 | **SQL** (Postgres) | **Langage de requête.** C'est la langue qu'on parle pour discuter avec la base de données. | On ne dit pas "Donne-moi les données", on dit `SELECT * FROM tiles`. C'est un langage très précis pour extraire exactement ce qu'on veut de notre coffre-fort (Neon). |
-| **JSON** (`.json`) | **Texte structuré.** C'est juste du texte rangé proprement avec des accolades `{}`. | C'est le format universel pour stocker de la configuration ou échanger des données. C'est simple, lisible par un humain et par une machine. |
+| **JSON** (`.json`) | **Texte structuré.** C'est juste du texte rangé proprement avec des accolades `{}`. | C'est le format universel pour stocker de la configuration ou échanger des données. C'est simple, lisible par un.e humain.e et par une machine. |
 
 ---
 
@@ -46,8 +46,8 @@ Nous n'allons pas à la bataille les mains vides. Voici les armes légendaires q
 | Outil / Service | C'est quoi ? | Pourquoi c'est cool ? |
 | :--- | :--- | :--- |
 | **Next.js** | **Le Chef d'Orchestre.** C'est un "Framework" basé sur React. | Si React est le moteur, Next.js est la voiture complète (avec roues, volant, sièges). Il gère tout : l'affichage des pages, le référencement Google, et même le serveur. Sans lui, on devrait tout construire à la main. |
-| **React** | **Les Briques LEGO.** Une librairie pour créer des interfaces. | Au lieu de copier-coller du code HTML 50 fois pour faire 50 boutons, on crée un composant "Bouton" en React, et on l'utilise partout. Si on change le composant, tous les boutons du site changent ! |
-| **Vercel** | **Le Château dans les Nuages.** Notre hébergeur. | C'est là où le site "habite" sur internet. C'est magique : dès qu'on sauvegarde notre code, Vercel le prend, le construit, et le met en ligne en quelques secondes pour le monde entier. |
+| **React** | **Les Briques LEGO.** Une librairie pour créer des interfaces. | Au lieu de copier-coller du code HTML 50 fois pour faire 50 boutons, on crée un composant "Bouton" en React, et on l'utilise partout. Si on change le composant, tous les boutons du site changent, et c pratik |
+| **Vercel** | **Le Château dans les Nuages.** Notre hébergeur "serverless". | Dès qu'on sauvegarde du code sur ce github, Vercel le prend, le construit, et le met en ligne en quelques secondes, le tout sans nous allouer un serveur afin de sauver la planète et car nous sommes pauvres. |
 | **Neon** | **Le Coffre-fort.** Une base de données moderne (Serverless). | C'est là qu'on stocke toutes les infos des tuiles (titre, image, son). "Serverless" veut dire qu'elle s'allume quand on en a besoin et s'éteint quand on dort (c'est écolo et économique). |
 
 ---
