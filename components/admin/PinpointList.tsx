@@ -1,9 +1,100 @@
+/**
+ * -----------------------------------------------------------------------------
+ * FICHIER : components/admin/PinpointList.tsx
+ * -----------------------------------------------------------------------------
+ * RÔLE :
+ * C'est l'interface de gestion des "pinpoints" (points d'intérêt sur la carte).
+ * Permet d'ajouter, éditer, supprimer des marqueurs avec sons et icônes.
+ *
+ * FONCTIONNEMENT :
+ * 1. Affiche une liste des pinpoints existants.
+ * 2. Permet l'édition en place (inline editing) ou dans une modale.
+ * 3. Associe des sons et des icônes à chaque point.
+ * 4. Supporte les icônes personnalisées (upload).
+ * 5. Gère les catégories d'icônes (eau, nature, objets, etc).
+ *
+ * UTILISÉ PAR :
+ * - Anciennement utilisé, mais probablement en legacy mode.
+ * - La carte focus est devenue TileGrid (images au lieu de points).
+ * - Encore utile pour les tours guidés sur la carte.
+ *
+ * REPÈRES :
+ * - Lignes 22-27 : Logique de sauvegarde.
+ * - Lignes 29-43 : Chargement des icônes personnalisées.
+ * - Lignes 45-110 : Upload d'icônes.
+ * - Lignes 112-200+: Rendu de la liste et éditeurs.
+ * 
+ * DONNÉES MANAGÉES :
+ * - pinpoints : Array des points d'intérêt.
+ * - sounds : Array des fichiers audio disponibles.
+ * - customIcons : Icônes uploadées par l'admin.
+ * 
+ * FLUX D'ÉDITION :
+ * 1. Clique sur un pinpoint existant.
+ * 2. Un éditeur inline s'affiche.
+ * 3. Modifie titre, description, coordonnées, icône.
+ * 4. Clique "Enregistrer" pour appeler onSave().
+ * 5. Parent (admin/page.tsx) fait un PUT vers /api/pinpoints.
+ * 
+ * ICÔNES :
+ * - Catégories prédéfinies : eau, nature, objets, symboles.
+ * - Chaque catégorie a des emoji spécifiques.
+ * - Permet l'upload d'icônes PNG/SVG personnalisées.
+ * - Les icônes uploadées sont stockées en base (table custom_icons).
+ * - Accessible via /api/icons?id=X.
+ * 
+ * UPLOAD D'ICÔNES :
+ * - Types acceptés : png, svg, jpg, gif.
+ * - Taille max : 500 KB (petits fichiers).
+ * - Sauvegardé en base de données.
+ * 
+ * SONS :
+ * - Dropdown pour sélectionner parmi les sons existants.
+ * - Ou URL externe si l'utilisateur veut.
+ * - Les sons uploadés sont gérés ailleurs (SoundList.tsx).
+ * 
+ * COORDONNÉES :
+ * - Latitude et Longitude (format décimal).
+ * - Paris par défaut : 48.8566, 2.3522.
+ * - Modifiables pour placer précisément les points.
+ * 
+ * LIMITATIONS :
+ * - Liste plate (pas de filtrage ou pagination).
+ * - Édition inline peut être confuse avec beaucoup de points.
+ * - Pas de drag-drop pour repositionner sur la carte.
+ * 
+ * AMÉLIORATIONS FUTURES :
+ * - Mode carte avec clic pour ajouter des points.
+ * - Édition sur la carte (drag des marqueurs).
+ * - Groupes/catégories de pinpoints.
+ * - Affichage des pinpoints sur une mini-carte.
+ * 
+ * LIEN AVEC D'AUTRES FICHIERS :
+ * - admin/page.tsx : Père qui utilise ce composant.
+ * - /api/pinpoints : API des points.
+ * - Map.tsx : Affiche les pinpoints en public.
+ * - lib/db.ts : Types Pinpoint, Sound, CustomIcon.
+ * 
+ * NOTES :
+ * - Ce composant est volumineux (529 lignes).
+ * - À considérer pour refactoring (split en sous-composants).
+ * - Legacy : la navigation est devenue TileGrid (images).
+ * - Pinpoints sont encore utilisés pour la carte/tours.
+ * 
+ * _____________________________________________________________________________
+ * FIN DE LA DOCUMENTATION
+ * _____________________________________________________________________________
+ */
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import type { Pinpoint, Sound, CustomIcon } from '@/lib/db';
 import { ICON_CATEGORIES } from '@/lib/db';
 
+// ---------------------------------------------------------------------------
+// PROPS
+// ---------------------------------------------------------------------------
 interface PinpointListProps {
   pinpoints: Pinpoint[];
   sounds: Sound[];

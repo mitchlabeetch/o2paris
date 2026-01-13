@@ -1,3 +1,16 @@
+/**
+ * FICHIER : app/api/auth/route.ts
+ * RÔLE : Authentification générale avec gestion de tokens sécurisés.
+ * POST : Vérifie le mot de passe et crée un cookie de session sécurisé.
+ * DELETE : Supprime le cookie de session (déconnexion).
+ * Token : Généré via crypto.randomBytes(32) - base64.
+ * Stockage : Cookie httpOnly, secure, sameSite: strict.
+ * Durée : 24 heures (maxAge).
+ * Sécurité : httpOnly empêche l'accès JS ; secure en production.
+ * Comparaison : /api/auth/login/route.ts (simpler, sans token).
+ * _____________________________________________________________________________
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyPassword } from '@/lib/auth';
 

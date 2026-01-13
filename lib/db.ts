@@ -1,24 +1,60 @@
+/**
+ * -----------------------------------------------------------------------------
+ * FICHIER : lib/db.ts
+ * -----------------------------------------------------------------------------
+ * RÔLE :
+ * C'est la "prise de courant" vers la base de données.
+ * Ce fichier gère la connexion avec Neon (PostgreSQL) et définit à quoi
+ * ressemblent nos données (Types).
+ *
+ * FONCTIONNEMENT :
+ * 1. Il vérifie que l'URL de la base de données est bien présente.
+ * 2. Il crée un objet "sql" qui sera utilisé partout ailleurs pour faire des requêtes.
+ * 3. Il contient aussi la fonction "initDatabase" qui construit les tables
+ *    si elles n'existent pas (utilisée par init_db.js).
+ *
+ * REPÈRES :
+ * - Lignes 30-36 : Création du client SQL.
+ * - Lignes 38-120 : Définition des Types (Interfaces TypeScript).
+ * - Lignes 122+  : Données d'exemple (Seed) et fonction d'initialisation.
+ * -----------------------------------------------------------------------------
+ */
+
 import { neon } from '@neondatabase/serverless';
 
-// Get DATABASE_URL from environment
-// Use a valid but safe placeholder for build time
+// -----------------------------------------------------------------------------
+// VÉRIFICATION DE LA CONFIGURATION
+// -----------------------------------------------------------------------------
+// On s'assure que la variable d'environnement DATABASE_URL est valide.
+// Si ce n'est pas le cas, on utilise une valeur tampon pour éviter que le build plante,
+// mais on signale via "hasValidDatabaseUrl" que l'app ne peut pas fonctionner réellement.
 const PLACEHOLDER_DB_URL = 'postgresql://user:password@localhost:5432/placeholder';
 const DATABASE_URL = process.env.DATABASE_URL || PLACEHOLDER_DB_URL;
+
 const isValidDatabaseUrl = (value: string) =>
   /^postgres(?:ql)?:\/\/\S+$/i.test(value.trim());
+
 export const hasValidDatabaseUrl = Boolean(
   process.env.DATABASE_URL &&
   isValidDatabaseUrl(process.env.DATABASE_URL) &&
   process.env.DATABASE_URL !== PLACEHOLDER_DB_URL
 );
 
-// Create SQL client with proper configuration
-// fullResults: false returns rows directly (default behavior)
-// arrayMode: false returns rows as objects (default behavior)
+// -----------------------------------------------------------------------------
+// CLIENT SQL
+// -----------------------------------------------------------------------------
+// C'est cet objet "sql" qu'on importe dans les routes API pour parler à la base.
+// Neon permet de faire des requêtes HTTP (Serverless), c'est très rapide.
 export const sql = neon(DATABASE_URL, {
-  fullResults: false,
-  arrayMode: false,
+  fullResults: false, // On veut juste les données, pas les métadonnées techniques
+  arrayMode: false,   // On veut des objets { id: 1, ... } pas des tableaux [1, ...]
 });
+
+// -----------------------------------------------------------------------------
+// DÉFINITIONS DE TYPES (INTERFACES)
+// -----------------------------------------------------------------------------
+// Ces interfaces décrivent la forme exacte de nos données.
+// TypeScript les utilise pour nous empêcher de demander un champ qui n'existe pas.
 
 export interface Pinpoint {
   id: number;
@@ -39,7 +75,7 @@ export interface Tile {
   sound_url: string;
   image_url: string;
   display_order: number;
-  style_config?: any; // JSONB
+  style_config?: any; // JSONB pour stocker des configs flexibles (police, couleur)
   created_at: Date;
   updated_at: Date;
 }
@@ -97,6 +133,10 @@ export interface CustomBackground {
   created_at: Date;
 }
 
+// -----------------------------------------------------------------------------
+// VALEURS PAR DÉFAUT & DONNÉES D'EXEMPLE
+// -----------------------------------------------------------------------------
+
 export const DEFAULT_MAP_CONFIG: Omit<MapConfig, 'id' | 'updated_at'> = {
   tile_layer_url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
   center_lat: 48.8566,
@@ -114,7 +154,7 @@ export const DEFAULT_MAP_CONFIG: Omit<MapConfig, 'id' | 'updated_at'> = {
   secondary_color: '#1565c0',
 };
 
-// Background theme presets with visual previews
+// Liste des thèmes de fond prédéfinis
 export const BACKGROUND_PRESETS = [
   { id: 'water', name: 'Eau', preview: '💧', cssClass: 'bg-gradient-to-br from-water-light via-water-main to-water-deep' },
   { id: 'light', name: 'Clair', preview: '☀️', cssClass: 'bg-gray-100' },
@@ -379,6 +419,7 @@ export const FONT_PRESETS = [
   { id: 'lora', name: 'Lora', value: 'Lora', style: 'serif' },
 ];
 
+// Données d'exemple pour le peuplement initial (Seed)
 export const SEED_PINPOINTS: Omit<Pinpoint, 'id' | 'created_at' | 'updated_at'>[] = [
   {
     latitude: 48.8566,
@@ -502,14 +543,18 @@ export const FALLBACK_MAP_CONFIG: MapConfig = {
   ...DEFAULT_MAP_CONFIG,
 };
 
-// Initialize database tables
+// -----------------------------------------------------------------------------
+// INITIALISATION DE LA BASE DE DONNÉES
+// -----------------------------------------------------------------------------
+// Cette fonction crée toutes les tables si elles n'existent pas.
+// Elle est appelée par les scripts de démarrage.
 export async function initDatabase() {
   try {
     if (!hasValidDatabaseUrl) {
       throw new Error('DATABASE_URL is not configured. Set it before initializing the database.');
     }
 
-    // Create pinpoints table (Legacy support)
+    // Création de la table des points (Pour la carte - Legacy)
     await sql`
       CREATE TABLE IF NOT EXISTS pinpoints (
         id SERIAL PRIMARY KEY,
@@ -525,7 +570,7 @@ export async function initDatabase() {
       )
     `;
 
-    // Create tiles table (New Photo-based Navigation)
+    // Création de la table des tuiles (Nouvelle navigation photo)
     await sql`
       CREATE TABLE IF NOT EXISTS tiles (
         id SERIAL PRIMARY KEY,
@@ -540,7 +585,7 @@ export async function initDatabase() {
       )
     `;
 
-    // Create map_config table
+    // Création de la table de configuration (Map config)
     await sql`
       CREATE TABLE IF NOT EXISTS map_config (
         id SERIAL PRIMARY KEY,
@@ -567,7 +612,7 @@ export async function initDatabase() {
       await sql`ALTER TABLE map_config ADD COLUMN background_theme VARCHAR(50) DEFAULT 'water'`;
     }
 
-    // Add new customization columns (migration)
+    // Migration : Ajout des nouvelles colonnes de personnalisation si absentes
     const newColumns = ['app_title', 'app_subtitle', 'overlay_icon', 'font_family', 'primary_color', 'secondary_color'];
     for (const col of newColumns) {
       const colCheck = await sql`
@@ -593,7 +638,7 @@ export async function initDatabase() {
       }
     }
 
-    // Create sounds table for storing audio files
+    // Création de la table des sons
     await sql`
       CREATE TABLE IF NOT EXISTS sounds (
         id SERIAL PRIMARY KEY,
@@ -605,7 +650,7 @@ export async function initDatabase() {
       )
     `;
 
-    // Create images table for storing image files
+    // Création de la table des images
     await sql`
       CREATE TABLE IF NOT EXISTS images (
         id SERIAL PRIMARY KEY,
@@ -617,7 +662,7 @@ export async function initDatabase() {
       )
     `;
 
-    // Create custom_icons table for user-uploaded icons
+    // Création de la table des icônes personnalisées
     await sql`
       CREATE TABLE IF NOT EXISTS custom_icons (
         id SERIAL PRIMARY KEY,
@@ -629,7 +674,7 @@ export async function initDatabase() {
       )
     `;
 
-    // Create custom_backgrounds table for user-uploaded backgrounds
+    // Création de la table des fonds d'écran personnalisés
     await sql`
       CREATE TABLE IF NOT EXISTS custom_backgrounds (
         id SERIAL PRIMARY KEY,
@@ -641,16 +686,16 @@ export async function initDatabase() {
       )
     `;
 
-    // Helpful indexes for location & chronology
-    await sql`CREATE INDEX IF NOT EXISTS idx_pinpoints_location ON pinpoints(latitude, longitude)`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_tiles_order ON tiles(display_order)`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_sounds_created ON sounds(created_at)`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_images_created ON images(created_at)`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_custom_icons_created ON custom_icons(created_at)`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_custom_backgrounds_created ON custom_backgrounds(created_at)`;
+    // Création des index pour accélérer les recherches
+    await sql`CREATE INDEX IF NOT EXISTS idx_pinpoints_location ON pinpoints(latitude, longitude)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_tiles_order ON tiles(display_order)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_sounds_created ON sounds(created_at)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_images_created ON images(created_at)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_custom_icons_created ON custom_icons(created_at)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_custom_backgrounds_created ON custom_backgrounds(created_at)`
 
-    // Insert default map config if not exists
-    const configs = await sql`SELECT COUNT(*) as count FROM map_config`;
+    // Insertion de la config par défaut si vide
+    const configs = await sql`SELECT COUNT(*) as count FROM map_config`
     if (Number(configs[0].count) === 0) {
       await sql`
         INSERT INTO map_config (
@@ -673,28 +718,28 @@ export async function initDatabase() {
           ${DEFAULT_MAP_CONFIG.primary_color},
           ${DEFAULT_MAP_CONFIG.secondary_color}
         )
-      `;
+      `
     }
 
-    // Seed sample pinpoints when empty
-    const pinpointsCount = await sql`SELECT COUNT(*) as count FROM pinpoints`;
+    // Peuplement des points (seed) si vide
+    const pinpointsCount = await sql`SELECT COUNT(*) as count FROM pinpoints`
     if (Number(pinpointsCount[0].count) === 0) {
       for (const point of SEED_PINPOINTS) {
         await sql`
           INSERT INTO pinpoints (latitude, longitude, title, description, sound_url, icon)
           VALUES (${point.latitude}, ${point.longitude}, ${point.title}, ${point.description}, ${point.sound_url}, ${point.icon})
-        `;
+        `
       }
     }
 
-    // Seed sample tiles when empty
-    const tilesCount = await sql`SELECT COUNT(*) as count FROM tiles`;
+    // Peuplement des tuiles (seed) si vide
+    const tilesCount = await sql`SELECT COUNT(*) as count FROM tiles`
     if (Number(tilesCount[0].count) === 0) {
       for (const tile of SEED_TILES) {
         await sql`
           INSERT INTO tiles (title, description, sound_url, image_url, display_order, style_config)
           VALUES (${tile.title}, ${tile.description}, ${tile.sound_url}, ${tile.image_url}, ${tile.display_order}, ${tile.style_config})
-        `;
+        `
       }
     }
 

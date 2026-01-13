@@ -1,3 +1,15 @@
+/**
+ * FICHIER : app/api/tiles/reorder/route.ts
+ * RÔLE : Sauvegarde l'ordre des tuiles après un drag-drop.
+ * POST : Reçoit un array d'IDs en nouvel ordre (orderedIds).
+ * Flux : AdminTileGrid (dnd-kit) -> POST /api/tiles/reorder -> UPDATE display_order.
+ * Résultat : Les tuiles dans TileGrid s'affichent dans le nouvel ordre.
+ * Utilisé par : AdminTileGrid.tsx (drag-drop de tuiles).
+ * Mise à jour : Sequential UPDATE (pas de transaction complexe).
+ * Note : display_order sert de clé de tri (ORDER BY display_order ASC).
+ * _____________________________________________________________________________
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { hasValidDatabaseUrl, sql } from '@/lib/db';
 

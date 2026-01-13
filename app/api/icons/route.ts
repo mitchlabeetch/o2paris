@@ -1,3 +1,16 @@
+/**
+ * FICHIER : app/api/icons/route.ts
+ * RÔLE : Gestion des icônes personnalisées (petites images pour les pinpoints).
+ * GET sans ID : Liste toutes les icônes uploadées.
+ * GET avec ID : Retourne l'icône spécifique (image binaire).
+ * POST : Upload d'une nouvelle icône (max 500 KB, PNG/SVG/JPG).
+ * DELETE : Suppression d'une icône.
+ * Stockage : table custom_icons (BYTEA).
+ * Utilisation : PinpointList.tsx (sélection d'icônes pour points).
+ * Similaire à : app/api/backgrounds/route.ts.
+ * _____________________________________________________________________________
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { hasValidDatabaseUrl, sql } from '@/lib/db';
 

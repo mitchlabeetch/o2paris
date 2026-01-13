@@ -1,3 +1,13 @@
+/**
+ * FICHIER : app/not-found.tsx
+ * RÔLE : Page 404 personnalisée (page introuvable).
+ * Affichage : Fond dégradé bleu, emoji goutte animée, lien retour.
+ * Auto-activé : Next.js appelle ce composant pour toutes les routes 404.
+ * Style : Cohérent avec le thème "eau" du site.
+ * CTA : Bouton "Retourner à la carte" (href="/").
+ * _____________________________________________________________________________
+ */
+
 export default function NotFound() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-200 flex items-center justify-center p-4">

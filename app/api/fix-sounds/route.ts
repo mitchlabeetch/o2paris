@@ -1,3 +1,15 @@
+/**
+ * FICHIER : app/api/fix-sounds/route.ts
+ * RÔLE : Utilitaire pour migrer les URLs sonores externes vers des URLs internes.
+ * GET : Audit tous les pinpoints, trouve ceux avec URLs externes (http://...).
+ * Action : Remplace les URLs externes par /api/sounds?id=X (sons stockés en base).
+ * Utilité : Migration des données (quand on passe de CDN à base de données).
+ * Résultat : JSON avec stats (total, external_urls_found, fixed).
+ * Utilisation : Une seule fois lors de la migration (curl /api/fix-sounds).
+ * Note : Idempotent (safe à appeler plusieurs fois).
+ * _____________________________________________________________________________
+ */
+
 import { NextResponse } from 'next/server';
 import { hasValidDatabaseUrl, sql } from '@/lib/db';
 

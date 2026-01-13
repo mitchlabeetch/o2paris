@@ -1,10 +1,39 @@
+/**
+ * -----------------------------------------------------------------------------
+ * FICHIER : app/api/config/route.ts
+ * -----------------------------------------------------------------------------
+ * RÔLE :
+ * C'est le "tableau de bord" du site. Cette API permet de lire ET modifier
+ * la configuration globale (titre, couleurs, thème, paramètres de carte).
+ *
+ * FONCTIONNEMENT :
+ * - GET  : Récupère la configuration actuelle de la base de données.
+ * - PUT  : Met à jour la configuration (utilisé par l'admin).
+ * - Elle supporte les "partial updates" : on peut changer juste une couleur
+ *   sans perdre les autres paramètres.
+ *
+ * REPÈRES :
+ * - Lignes 17-47 : Fonction GET (Lecture simple).
+ * - Lignes 49-159 : Fonction PUT (Mise à jour avec fusion intelligente).
+ * - Lignes 67-92  : Logique de fusion (merge) entre ancienne et nouvelle config.
+ * - Lignes 82-91  : Conversion et validation des nombres.
+ * - Lignes 110-126: Insertion si la config n'existe pas.
+ * - Lignes 128-150: Mise à jour si la config existe.
+ * -----------------------------------------------------------------------------
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { DEFAULT_MAP_CONFIG, hasValidDatabaseUrl, sql } from '@/lib/db';
 
 // Force dynamic rendering and disable caching
+// Cette API doit TOUJOURS renvoyer les données fraîches, jamais du cache
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+// ---------------------------------------------------------------------------
+// MÉTHODE GET (LECTURE)
+// ---------------------------------------------------------------------------
+// Appelée quand le frontend demande la config actuelle
 export async function GET() {
   try {
     if (!hasValidDatabaseUrl) {
@@ -46,24 +75,31 @@ export async function GET() {
   }
 }
 
+// ---------------------------------------------------------------------------
+// MÉTHODE PUT (MISE À JOUR)
+// ---------------------------------------------------------------------------
+// Appelée quand l'admin sauvegarde la configuration via le formulaire
 export async function PUT(request: NextRequest) {
-  try {
-    if (!hasValidDatabaseUrl) {
-      return NextResponse.json(
-        { error: 'DATABASE_URL manquante. Initialisez la base avec /api/init.' },
-        { status: 503 }
-      );
-    }
+   try {
+     if (!hasValidDatabaseUrl) {
+       return NextResponse.json(
+         { error: 'DATABASE_URL manquante. Initialisez la base avec /api/init.' },
+         { status: 503 }
+       );
+     }
 
-    const body = await request.json();
+     const body = await request.json();
 
-    // Fetch current configuration to allow partial updates
-    const currentConfigRows = await sql`SELECT * FROM map_config ORDER BY id DESC LIMIT 1`;
-    const currentConfig = currentConfigRows.length > 0 ? currentConfigRows[0] : DEFAULT_MAP_CONFIG;
+     // ---------------------------------------------------------------------------
+     // FUSION INTELLIGENTE (MERGE)
+     // ---------------------------------------------------------------------------
+     // On récupère la config existante pour ne pas perdre les champs non envoyés
+     const currentConfigRows = await sql`SELECT * FROM map_config ORDER BY id DESC LIMIT 1`;
+     const currentConfig = currentConfigRows.length > 0 ? currentConfigRows[0] : DEFAULT_MAP_CONFIG;
 
-    // Merge body with current config.
-    // Use body value if present (and not null/undefined), else use current config.
-    // We treat null/undefined in body as "do not update".
+     // Stratégie : Si le body contient une valeur (non vide, non null), on l'utilise.
+     // Sinon, on garde la valeur actuelle. Cela permet les mises à jour partielles.
+     // Exemple : envoyer juste { "app_title": "Nouveau titre" } ne change que le titre.
     const getValue = (key: string, current: any) => {
       return body[key] !== undefined && body[key] !== null ? body[key] : current;
     };

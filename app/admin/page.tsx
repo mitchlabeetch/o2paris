@@ -1,3 +1,25 @@
+/**
+ * -----------------------------------------------------------------------------
+ * FICHIER : app/admin/page.tsx
+ * -----------------------------------------------------------------------------
+ * RÔLE :
+ * C'est le tableau de bord d'administration ("Les Coulisses").
+ * Il permet d'ajouter/modifier/supprimer des tuiles et de changer la configuration
+ * globale du site (couleurs, titres).
+ *
+ * FONCTIONNEMENT :
+ * 1. Vérifie si l'utilisateur est connecté (variable d'état 'isAuthenticated').
+ * 2. Si NON : Affiche le formulaire de connexion (LoginForm).
+ * 3. Si OUI : Affiche l'interface de gestion avec deux onglets (Tuiles / Config).
+ *
+ * REPÈRES :
+ * - Lignes 37-47 : Gestion des états (State) pour l'interface.
+ * - Lignes 49-57 : Vérification de la session au démarrage.
+ * - Lignes 72-95 : Gestion de la connexion (Login).
+ * - Lignes 146+  : Rendu conditionnel (Login OU Dashboard).
+ * -----------------------------------------------------------------------------
+ */
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -9,17 +31,32 @@ import ConfigForm from '@/components/admin/ConfigForm';
 type TabType = 'tiles' | 'config';
 
 export default function AdminPage() {
+  // ---------------------------------------------------------------------------
+  // ÉTATS (STATE)
+  // ---------------------------------------------------------------------------
+  // Est-ce que l'utilisateur a rentré le bon mot de passe ?
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // Quel onglet est actif ? ('tiles' ou 'config')
   const [activeTab, setActiveTab] = useState<TabType>('tiles');
+  
+  // Données
   const [tiles, setTiles] = useState<any[]>([]);
+  const [config, setConfig] = useState<any>({});
+  
+  // États pour le formulaire d'édition (Modal)
   const [editingTile, setEditingTile] = useState<any | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  
+  // États pour le formulaire de connexion
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [config, setConfig] = useState<any>({});
 
+  // ---------------------------------------------------------------------------
+  // EFFET : VÉRIFICATION DE SESSION
+  // ---------------------------------------------------------------------------
+  // Au chargement de la page, on regarde si une session est déjà ouverte
+  // dans le navigateur (sessionStorage) pour ne pas redemander le mot de passe.
   useEffect(() => {
-    // Check session (persisted in session storage for this demo)
     const adminSession = sessionStorage.getItem('admin_session');
     if (adminSession === 'active') {
         setIsAuthenticated(true);
@@ -28,6 +65,9 @@ export default function AdminPage() {
     }
   }, []);
 
+  // ---------------------------------------------------------------------------
+  // CHARGEMENT DES DONNÉES
+  // ---------------------------------------------------------------------------
   const loadTiles = () => {
     fetch('/api/tiles')
       .then(res => res.json())
@@ -42,11 +82,17 @@ export default function AdminPage() {
       .catch(console.error);
   };
 
+  // ---------------------------------------------------------------------------
+  // ACTIONS (HANDLERS)
+  // ---------------------------------------------------------------------------
+  
+  // Tentative de connexion
   const handleLogin = async (password: string) => {
     setLoading(true);
     setError('');
 
     try {
+        // On envoie le mot de passe au serveur pour vérification
         const res = await fetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -54,9 +100,11 @@ export default function AdminPage() {
         });
 
         if (res.ok) {
+             // Si c'est bon, on sauvegarde la session et on charge les données
              sessionStorage.setItem('admin_session', 'active');
              setIsAuthenticated(true);
              loadTiles();
+             loadConfig();
         } else {
             setError('Mot de passe incorrect');
         }
@@ -67,27 +115,32 @@ export default function AdminPage() {
     }
   };
 
+  // Suppression d'une tuile
   const handleDelete = async (id: number) => {
     if (!confirm('Supprimer cette tuile ?')) return;
     await fetch(`/api/tiles/${id}`, { method: 'DELETE' });
-    loadTiles();
+    loadTiles(); // On recharge la liste pour voir la suppression
   };
 
+  // Sauvegarde (Création ou Modification) d'une tuile
   const handleSave = async (data: any) => {
     try {
         if (editingTile) {
+            // Modification (PUT)
             await fetch(`/api/tiles/${editingTile.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
         } else {
+            // Création (POST)
             await fetch('/api/tiles', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
         }
+        // Fermeture du formulaire et rechargement
         setEditingTile(null);
         setIsAdding(false);
         loadTiles();
@@ -97,6 +150,7 @@ export default function AdminPage() {
     }
   };
 
+  // Sauvegarde de la configuration globale
   const handleSaveConfig = async (newConfig: any) => {
     try {
       await fetch('/api/config', {
@@ -113,6 +167,9 @@ export default function AdminPage() {
     }
   };
 
+  // ---------------------------------------------------------------------------
+  // RENDU CONDITIONNEL : LOGIN
+  // ---------------------------------------------------------------------------
   if (!isAuthenticated) {
     return (
         <LoginForm
@@ -123,14 +180,19 @@ export default function AdminPage() {
     );
   }
 
+  // Configuration des onglets pour l'affichage
   const tabs = [
     { id: 'tiles' as TabType, label: '🖼️ Tuiles', description: 'Gérer les tuiles visuelles' },
     { id: 'config' as TabType, label: '⚙️ Configuration', description: 'Personnalisation globale' },
   ];
 
+  // ---------------------------------------------------------------------------
+  // RENDU PRINCIPAL : DASHBOARD
+  // ---------------------------------------------------------------------------
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
+        {/* En-tête avec bouton de déconnexion */}
         <header className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-serif">Administration Eau de Paris</h1>
@@ -147,7 +209,7 @@ export default function AdminPage() {
             </button>
         </header>
 
-        {/* Tabs Navigation */}
+        {/* Navigation par Onglets */}
         <div className="bg-white rounded-xl shadow-sm mb-6 p-2">
           <div className="flex gap-2 overflow-x-auto">
             {tabs.map((tab) => (
@@ -167,7 +229,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Tab Content */}
+        {/* Contenu de l'onglet actif */}
         <div className="bg-white p-6 rounded-xl shadow-sm">
           {activeTab === 'tiles' && (
             <>
@@ -198,7 +260,7 @@ export default function AdminPage() {
           )}
         </div>
 
-        {/* Modal/Overlay for Form */}
+        {/* Modale d'édition (Superposée par dessus tout) */}
         {(isAdding || editingTile) && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                 <div className="w-full max-w-2xl">

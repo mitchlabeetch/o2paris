@@ -1,15 +1,40 @@
+/**
+ * -----------------------------------------------------------------------------
+ * FICHIER : lib/client-utils.ts
+ * -----------------------------------------------------------------------------
+ * RÔLE :
+ * C'est la boîte à outils du navigateur ("Le Couteau Suisse").
+ * Elle contient des petites fonctions pratiques utilisées par les composants React.
+ *
+ * FONCTIONNEMENT :
+ * Ce sont des "fonctions pures" : elles prennent une entrée, font un calcul,
+ * et renvoient un résultat sans modifier l'état global.
+ *
+ * REPÈRES :
+ * - Lignes 18-24 : Lecture de cookies (utilisé pour l'authentification).
+ * - Lignes 30-38 : Mélange simple d'un tableau.
+ * - Lignes 48+   : Mélange "intelligent" pour éviter que deux images identiques se suivent.
+ * -----------------------------------------------------------------------------
+ */
+
+// -----------------------------------------------------------------------------
+// GESTION DES COOKIES
+// -----------------------------------------------------------------------------
+// Récupère la valeur d'un cookie par son nom.
+// Utile pour vérifier si l'utilisateur est connecté (token 'admin_session').
 export function getCookie(name: string): string | null {
-  if (typeof document === 'undefined') return null;
+  if (typeof document === 'undefined') return null; // Sécurité : ne rien faire si on est sur le serveur
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
   if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
   return null;
 }
 
-/**
- * Shuffles an array using Fisher-Yates algorithm
- * Returns a new array without modifying the original
- */
+// -----------------------------------------------------------------------------
+// MÉLANGE ALÉATOIRE SIMPLE
+// -----------------------------------------------------------------------------
+// Utilise l'algorithme de Fisher-Yates (le standard pour mélanger des cartes).
+// Renvoie une COPIE du tableau mélangé (ne modifie pas l'original).
 export function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -19,15 +44,16 @@ export function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
-/**
- * Enhanced shuffle that prevents consecutive duplicate tiles
- * Uses Fisher-Yates with post-shuffle optimization to swap consecutive duplicates
- * 
- * @param array - Array of items to shuffle
- * @param equalityFn - Function to determine if two items are duplicates
- * @param lastDisplayedItem - Optional last item from previous cycle to avoid at the start
- * @returns Shuffled array with minimized consecutive duplicates
- */
+// -----------------------------------------------------------------------------
+// MÉLANGE INTELLIGENT (ANTI-DOUBLONS)
+// -----------------------------------------------------------------------------
+// C'est une version avancée du mélangeur.
+// PROBLÈME : Si on a peu de tuiles, le hasard peut mettre deux fois la même image côte à côte.
+// SOLUTION : On mélange, puis on parcourt le résultat pour corriger les doublons adjacents.
+//
+// @param array : Le tableau à mélanger
+// @param equalityFn : Une fonction qui dit si deux objets sont "identiques" (ex: même image)
+// @param lastDisplayedItem : (Optionnel) Le dernier élément affiché précédemment, pour éviter une répétition au début.
 export function shuffleArrayNoDuplicates<T>(
   array: T[],
   equalityFn: (a: T, b: T) => boolean,
@@ -35,52 +61,49 @@ export function shuffleArrayNoDuplicates<T>(
 ): T[] {
   if (array.length <= 1) return [...array];
   
-  // Constants for algorithm tuning
-  const MAX_SHUFFLE_ATTEMPTS = 100; // Prevent infinite loops
-  const RESHUFFLE_INTERVAL = 10; // Re-shuffle every N attempts
+  // Constantes pour éviter de tourner en rond indéfiniment
+  const MAX_SHUFFLE_ATTEMPTS = 100;
+  const RESHUFFLE_INTERVAL = 10;
   
-  // Start with standard Fisher-Yates shuffle
+  // 1. On commence par un mélange simple
   let shuffled = shuffleArray(array);
   
-  // Helper to swap elements
+  // Petite fonction locale pour échanger deux éléments
   const swap = (idx1: number, idx2: number) => {
     [shuffled[idx1], shuffled[idx2]] = [shuffled[idx2], shuffled[idx1]];
   };
 
-  // Ensure first item is different from lastDisplayedItem
+  // 2. On s'assure que le premier élément n'est pas le même que le dernier vu
   if (lastDisplayedItem && equalityFn(shuffled[0], lastDisplayedItem)) {
-    // Find first item that's different
     let swapIndex = 1;
+    // On cherche le premier élément différent
     while (swapIndex < shuffled.length && equalityFn(shuffled[swapIndex], lastDisplayedItem)) {
       swapIndex++;
     }
-
-    // If we found a different item, swap it to the front
+    // Et on l'échange avec le premier
     if (swapIndex < shuffled.length) {
       swap(0, swapIndex);
     }
   }
   
-  // Fix any consecutive duplicates within the shuffled array
+  // 3. Correction des doublons consécutifs
   let attempt = 0;
   
   while (attempt < MAX_SHUFFLE_ATTEMPTS) {
     let hasConsecutiveDuplicates = false;
     
-    // Find consecutive duplicates
     for (let i = 0; i < shuffled.length - 1; i++) {
+      // Si l'élément actuel est identique au suivant...
       if (equalityFn(shuffled[i], shuffled[i + 1])) {
         hasConsecutiveDuplicates = true;
         
-        // Try to find a different item to swap with shuffled[i+1]
-        // Look ahead in the array for a non-duplicate
+        // ... on cherche un candidat plus loin pour l'échanger
         let swapIndex = -1;
         for (let j = i + 2; j < shuffled.length; j++) {
-          // Check that swapping won't create new consecutive duplicates
-          // After swap: shuffled[j] goes to position i+1, shuffled[i+1] goes to position j
           const candidate = shuffled[j];
           const problem = shuffled[i + 1];
 
+          // On vérifie que l'échange ne va pas CRÉER un nouveau problème ailleurs
           const createsIssueAtDest =
             equalityFn(candidate, shuffled[i]) ||
             (i + 2 < shuffled.length && equalityFn(candidate, shuffled[i + 2]));
@@ -95,25 +118,24 @@ export function shuffleArrayNoDuplicates<T>(
           }
         }
         
-        // If found a good swap candidate, perform the swap
+        // Si on a trouvé un candidat, on échange
         if (swapIndex !== -1) {
           swap(i + 1, swapIndex);
-          // Don't break; continue checking for more duplicates
         }
       }
     }
     
-    // If no consecutive duplicates found, we're done
+    // Si on a fait un tour sans trouver de doublons, c'est gagné !
     if (!hasConsecutiveDuplicates) {
       break;
     }
     
     attempt++;
     
-    // If we've tried too many times, do a complete re-shuffle
+    // Si on galère trop, on remélange tout pour repartir sur de nouvelles bases
     if (attempt % RESHUFFLE_INTERVAL === 0) {
       shuffled = shuffleArray(array);
-      // Re-apply lastDisplayedItem constraint after re-shuffle
+      // On réapplique la règle du premier élément
       if (lastDisplayedItem && equalityFn(shuffled[0], lastDisplayedItem)) {
         let swapIndex = 1;
         while (swapIndex < shuffled.length && equalityFn(shuffled[swapIndex], lastDisplayedItem)) {

@@ -1,3 +1,16 @@
+/**
+ * FICHIER : app/api/pinpoints/route.ts
+ * RÔLE : API de gestion des points d'intérêt (marqueurs sur la carte).
+ * GET : Récupère tous les pinpoints (conversion DECIMAL en Number).
+ * POST : Crée un nouveau pinpoint (latitude, longitude, titre, son, icône).
+ * Similaire à : app/api/tiles/route.ts (liste + création).
+ * Stockage : table pinpoints (SERIAL id, coordonnées, description).
+ * Utilisation : PinpointList.tsx et Map.tsx.
+ * Validation : latitude/longitude requises, titre requis, son requis.
+ * Note : Legacy (l'app pivot vers TileGrid pour la nav principale).
+ * _____________________________________________________________________________
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { hasValidDatabaseUrl, sql } from '@/lib/db';
 

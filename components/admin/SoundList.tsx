@@ -1,8 +1,121 @@
+/**
+ * -----------------------------------------------------------------------------
+ * FICHIER : components/admin/SoundList.tsx
+ * -----------------------------------------------------------------------------
+ * RÔLE :
+ * C'est la "Discothèque" de l'app.
+ * Permet de gérer les fichiers sonores : upload, suppression, test d'écoute.
+ *
+ * FONCTIONNEMENT :
+ * 1. Affiche une liste des sons déjà uploadés.
+ * 2. Permet d'uploader de nouveaux fichiers sonores.
+ * 3. Permet de tester l'écoute directement (play button).
+ * 4. Affiche des infos : nom, taille, date de création.
+ * 5. Permet de copier l'URL du son (pour utilisation ailleurs).
+ *
+ * UTILISÉ PAR :
+ * - admin/page.tsx : Onglet "Sons" du tableau de bord admin.
+ * - TileForm.tsx : Pour sélectionner les sons des tuiles.
+ * - PinpointList.tsx : Pour sélectionner les sons des points.
+ *
+ * REPÈRES :
+ * - Lignes 14-25 : État et refs pour la lecture audio.
+ * - Lignes 27-70 : Logique de play/pause du son.
+ * - Lignes 72-120+ : Upload et suppression.
+ * - Lignes 130+  : Rendu de la liste et boutons.
+ * 
+ * TYPES DE FICHIERS ACCEPTÉS :
+ * - audio/mpeg (mp3)
+ * - audio/wav
+ * - audio/ogg
+ * - audio/webm
+ * - audio/aac
+ * - Validation côté client ET serveur.
+ * 
+ * TAILLE LIMITE :
+ * - Max 10 MB par fichier son.
+ * - Vérification côté serveur.
+ * 
+ * FLUX D'UPLOAD :
+ * 1. Clique sur "Sélectionner un fichier" (input type="file").
+ * 2. Choisir un fichier audio.
+ * 3. Appelle onUpload(file) - envoyé au parent.
+ * 4. Parent fait POST /api/sounds avec le fichier.
+ * 5. Serveur sauve en base et retourne l'ID.
+ * 6. Parent appelle loadSounds() et passe les nuevos données.
+ * 7. List se met à jour avec le nouveau son.
+ * 
+ * TEST D'ÉCOUTE :
+ * - Clique le bouton play (▶) à côté du son.
+ * - Crée un élément <audio> et appelle .play().
+ * - Si un autre son est en cours, on l'arrête d'abord.
+ * - URL : /api/sounds?id=X (fetche depuis la base).
+ * 
+ * GESTION DE L'AUDIO :
+ * - audioRef : Stocke la référence à l'élément audio.
+ * - playingSoundId : ID du son en cours de lecture.
+ * - Cleanup au démontage (pause + delete ref).
+ * 
+ * AFFICHAGE :
+ * - Nom du fichier.
+ * - Taille en KB/MB.
+ * - Date d'upload.
+ * - Boutons : Play (▶), Copier l'URL (📋), Supprimer (🗑️).
+ * 
+ * COPIE D'URL :
+ * - Clique le bouton 📋.
+ * - Copie dans le presse-papiers : /api/sounds?id=X.
+ * - Feedback visuel : "Copié !" tooltip.
+ * - Utile pour partager ou inclure dans d'autres ressources.
+ * 
+ * SUPPRESSION :
+ * - Confirmation : "Supprimer ce son ?".
+ * - Appelle onDelete(id) - parent fait DELETE /api/sounds?id=X.
+ * - List se met à jour.
+ * 
+ * PERFORMANCE :
+ * - Pas de rechargement de page à chaque upload.
+ * - Audio fetch uniquement au clic play.
+ * - Cleanup automatique au démontage.
+ * 
+ * LIMITATIONS :
+ * - Pas de preview audio (ondes sonores visuelles).
+ * - Pas de édition des métadonnées (title, artist).
+ * - Pas de conversion format.
+ * 
+ * AMÉLIORATIONS FUTURES :
+ * - Drag & drop pour upload.
+ * - Visualiseur d'ondes sonores.
+ * - Trim/découpe des sons.
+ * - Édition des métadonnées ID3.
+ * - Compression d'audio.
+ * 
+ * LIEN AVEC D'AUTRES FICHIERS :
+ * - admin/page.tsx : Père.
+ * - /api/sounds : API de gestion des sons.
+ * - TileForm.tsx : Utilise les sons.
+ * - PinpointList.tsx : Utilise les sons.
+ * - Map.tsx : Lit les sons en public.
+ * - lib/db.ts : Type Sound.
+ * 
+ * NOTES :
+ * - Composant relativement simple (212 lignes).
+ * - Centré sur la gestion de fichiers.
+ * - Peu de logique complexe.
+ * 
+ * _____________________________________________________________________________
+ * FIN DE LA DOCUMENTATION
+ * _____________________________________________________________________________
+ */
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import type { Sound } from '@/lib/db';
 
+// ---------------------------------------------------------------------------
+// PROPS
+// ---------------------------------------------------------------------------
 interface SoundListProps {
   sounds: Sound[];
   onUpload: (file: File) => Promise<void>;

@@ -1,9 +1,132 @@
+/**
+ * -----------------------------------------------------------------------------
+ * FICHIER : components/admin/ConfigForm.tsx
+ * -----------------------------------------------------------------------------
+ * RÔLE :
+ * C'est le "Tableau de Personnalisation" de l'app.
+ * Il permet de modifier tous les paramètres globaux : titre, couleurs, police,
+ * thème de fond, icône d'accueil, et paramètres de la carte.
+ *
+ * FONCTIONNEMENT :
+ * 1. Affiche des onglets pour différentes sections (général, carte, thème).
+ * 2. Permet de sélectionner parmi des presets (couleurs, polices, fonds).
+ * 3. Permet d'uploader des fonds d'écran personnalisés.
+ * 4. Sauvegarde tout en base de données via l'API /api/config.
+ * 5. Les changements sont appliqués en temps réel au public.
+ *
+ * UTILISÉ PAR :
+ * - admin/page.tsx : Onglet "Configuration" du tableau de bord.
+ *
+ * REPÈRES :
+ * - Lignes 39-82 : Upload des fonds personnalisés.
+ * - Lignes 84-108 : Suppression des fonds.
+ * - Lignes 110-200+ : Rendu des onglets et formulaires.
+ * 
+ * SECTIONS CONFIGURABLES :
+ * 1. Général :
+ *    - Titre de l'app (app_title)
+ *    - Sous-titre (app_subtitle)
+ *    - Icône d'accueil (overlay_icon : emoji)
+ * 
+ * 2. Apparence :
+ *    - Police d'écriture (font_family)
+ *    - Couleur principale (primary_color)
+ *    - Couleur secondaire (secondary_color)
+ *    - Thème de fond (background_theme)
+ * 
+ * 3. Fonds Personnalisés :
+ *    - Upload d'images (max 2 MB)
+ *    - Suppression des fonds
+ *    - Sélection et aperçu
+ * 
+ * 4. Carte (Leaflet) :
+ *    - Coordonnées centrales (center_lat, center_lng)
+ *    - Niveaux de zoom (zoom_level, min_zoom, max_zoom)
+ *    - Couche de tuiles (tile_layer_url)
+ *    - Attribution
+ * 
+ * DONNÉES SAUVEGARDÉES :
+ * - Type MapConfig (voir lib/db.ts).
+ * - Stockées en base de données (table map_config).
+ * - Une seule ligne de config (mise à jour, pas d'insertion).
+ * 
+ * FLUX DE SAUVEGARDE :
+ * 1. L'utilisateur remplit les formulaires.
+ * 2. Clique sur "Enregistrer".
+ * 3. Appelle onSave(config) (callback du parent).
+ * 4. Le parent fait PUT /api/config avec les données.
+ * 5. Le serveur met à jour la base.
+ * 6. Le public voit les changements au prochain poll (5s par défaut).
+ * 
+ * PRESETS :
+ * - Polices : Playfair Display, Lato, Cinzel, etc.
+ * - Couleurs : Eau, ciel, forêt, coucher de soleil, etc.
+ * - Fonds : 20+ thèmes prédéfinis (eau, nuit, arc-en-ciel, etc).
+ * - Icônes : Plusieurs emoji par catégorie (eau, nature, objets).
+ * 
+ * UPLOAD DE FONDS :
+ * - Types acceptés : jpg, png, webp (images).
+ * - Taille max : 2 MB (plus que les images normales pour qualité).
+ * - Sauvegardé en base (table custom_backgrounds).
+ * - Accessible via /api/backgrounds?id=X.
+ * 
+ * LIMITATIONS :
+ * - Une seule config active à la fois (pas de profils).
+ * - Les changements ne se voient qu'après rafraîchissement du public.
+ * - Pas de preview en temps réel du public.
+ * 
+ * AMÉLIORATIONS FUTURES :
+ * - Preview en temps réel (iframe ou snapshot).
+ * - Historique des configurations (undo/redo).
+ * - Themes sauvegardés (save/load configurations).
+ * - Palette de couleurs générées (ColorPicker avancé).
+ * 
+ * SÉCURITÉ :
+ * - L'upload est validé côté serveur.
+ * - Les données sont échappées avant stockage.
+ * - Pas d'accès au disque (tout passe par l'API).
+ * 
+ * PERFORMANCE :
+ * - Les uploads sont asynchrones (ne bloquent pas).
+ * - Chaque changement ne requête qu'une seule API.
+ * - Les presets sont pre-chargés (pas d'appels supplémentaires).
+ * 
+ * LIEN AVEC D'AUTRES FICHIERS :
+ * - admin/page.tsx : Père qui utilise ce composant.
+ * - /api/config : Sauvegarde la configuration.
+ * - /api/backgrounds : Upload et gestion des fonds.
+ * - lib/db.ts : Types MapConfig, BACKGROUND_PRESETS, FONT_PRESETS.
+ * - app/page.tsx : Consomme la config (polling toutes les 5s).
+ * 
+ * EXEMPLE D'UTILISATION :
+ * ```tsx
+ * <ConfigForm
+ *   config={currentConfig}
+ *   onSave={async (config) => {
+ *     await fetch('/api/config', { method: 'PUT', body: JSON.stringify(config) })
+ *   }}
+ * />
+ * ```
+ * 
+ * NOTES :
+ * - Composant volumineux (441+ lignes).
+ * - Gère beaucoup de state (onglets, sélections, uploads).
+ * - À considérer pour refactoring (split en sous-composants).
+ * 
+ * _____________________________________________________________________________
+ * FIN DE LA DOCUMENTATION
+ * _____________________________________________________________________________
+ */
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import type { MapConfig, CustomBackground } from '@/lib/db';
 import { BACKGROUND_PRESETS, OVERLAY_ICON_PRESETS, FONT_PRESETS } from '@/lib/db';
 
+// ---------------------------------------------------------------------------
+// PROPS (PARAMÈTRES)
+// ---------------------------------------------------------------------------
 interface ConfigFormProps {
   config: Partial<MapConfig>;
   onSave: (config: Partial<MapConfig>) => Promise<void>;

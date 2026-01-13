@@ -1,3 +1,34 @@
+/**
+ * -----------------------------------------------------------------------------
+ * FICHIER : components/Map.tsx
+ * -----------------------------------------------------------------------------
+ * RÔLE :
+ * C'est le composant qui affiche une carte interactive avec des marqueurs.
+ * Il permet de cliquer sur des points (pinpoints) pour écouter des sons et
+ * lire des descriptions. Il supporte aussi un mode "visite guidée" automatisé.
+ *
+ * FONCTIONNEMENT :
+ * 1. Affiche une carte Leaflet centrée sur Paris.
+ * 2. Chaque marqueur représente un "pinpoint" (point d'intérêt avec son).
+ * 3. En cliquant sur un marqueur, on ouvre une popup avec audio et description.
+ * 4. Mode "tour" : sélectionne automatiquement les points et lit les sons.
+ * 5. Gère un registre global de sons en lecture pour "solo" (arrêt des autres).
+ *
+ * CONNEXIONS :
+ * - Reçoit "pinpoints" et "config" comme Props.
+ * - Utilise react-leaflet pour l'affichage de la carte.
+ * - Intègre le composant "AudioPlayer" pour la gestion des sons.
+ *
+ * REPÈRES :
+ * - Lignes 27-52   : Fonction createWaterIcon (icônes personnalisées).
+ * - Lignes 54-77   : Composant LocateControl (bouton de géolocalisation).
+ * - Lignes 79-300  : Composant AudioPlayer (lecteur audio avancé).
+ * - Lignes 302-331 : Composant TourEffect (gestion du mode visite guidée).
+ * - Lignes 338-483 : Composant Map principal.
+ * - Lignes 87-88   : Registre global playingAudios (contrôle du "solo").
+ * -----------------------------------------------------------------------------
+ */
+
 'use client';
 
 import { useCallback, useEffect, useState, useRef } from 'react';

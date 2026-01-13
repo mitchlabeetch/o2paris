@@ -1,3 +1,25 @@
+/**
+ * -----------------------------------------------------------------------------
+ * FICHIER : components/admin/LoginForm.tsx
+ * -----------------------------------------------------------------------------
+ * RÔLE :
+ * C'est la "Porte d'entrée" de l'administration.
+ * Un formulaire simple qui demande le mot de passe admin.
+ *
+ * FONCTIONNEMENT :
+ * 1. L'utilisateur entre un mot de passe.
+ * 2. On envoie ce mot de passe au serveur pour vérification.
+ * 3. Si correct, on affiche le tableau de bord (admin/page.tsx).
+ * 4. Si incorrect, on affiche un message d'erreur.
+ *
+ * REPÈRES :
+ * - Lignes 20 : Fond dégradé (eau).
+ * - Lignes 31-38 : Champ de saisie du mot de passe.
+ * - Lignes 53-59 : Bouton de connexion.
+ * - Lignes 63-67 : Message d'info (visible en développement).
+ * -----------------------------------------------------------------------------
+ */
+
 'use client';
 
 import { useState } from 'react';

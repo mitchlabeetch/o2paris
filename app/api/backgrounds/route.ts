@@ -1,3 +1,16 @@
+/**
+ * FICHIER : app/api/backgrounds/route.ts
+ * RÔLE : Gestion des fonds d'écran personnalisés (upload, list, delete)
+ * GET sans ID : Liste tous les fonds.
+ * GET avec ID : Télécharge un fond spécifique (image binaire).
+ * POST : Upload d'une nouvelle image de fond (max 2 MB).
+ * DELETE : Suppression d'un fond.
+ * Stockage en base : table custom_backgrounds (BYTEA pour les données).
+ * Utilisation : ConfigForm.tsx (sélection et upload de fonds).
+ * Similar à : app/api/images/route.ts (même structure).
+ * _____________________________________________________________________________
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { hasValidDatabaseUrl, sql } from '@/lib/db';
 

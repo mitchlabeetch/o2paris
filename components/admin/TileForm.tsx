@@ -1,3 +1,128 @@
+/**
+ * -----------------------------------------------------------------------------
+ * FICHIER : components/admin/TileForm.tsx
+ * -----------------------------------------------------------------------------
+ * RÔLE :
+ * C'est le formulaire de création/édition des tuiles dans l'admin.
+ * Permet d'ajouter ou modifier une tuile (titre, description, images, sons).
+ *
+ * FONCTIONNEMENT :
+ * 1. Affiche un formulaire avec champs pour titre, description, URLs.
+ * 2. Permet d'uploader une image et un son (au lieu de passer des URLs).
+ * 3. À la soumission, envoie les données au serveur.
+ * 4. Gère les deux modes : création (initialData = null) et édition.
+ *
+ * UTILISÉ PAR :
+ * - admin/page.tsx : Dans une modale quand on clique "Ajouter/Éditer".
+ *
+ * REPÈRES :
+ * - Lignes 5-9 : Props (paramètres).
+ * - Lignes 16-70 : Logique d'upload de fichiers.
+ * - Lignes 71-120 : Rendu du formulaire HTML.
+ * 
+ * FONCTIONNALITÉS :
+ * - Upload d'image : Sauvegarde en DB, construit l'URL dynamique.
+ * - Upload de son : Sauvegarde en DB, construit l'URL dynamique.
+ * - Validation : Vérification du type et taille des fichiers.
+ * - Édition : Remplit les champs avec les données initiales.
+ * - Création : Champs vides par défaut.
+ * 
+ * FLUX D'UPLOAD :
+ * 1. L'utilisateur sélectionne un fichier (input type="file").
+ * 2. StateLocal (imageFile, soundFile) est mise à jour.
+ * 3. À la soumission, on POST le fichier vers /api/images ou /api/sounds.
+ * 4. Le serveur sauve en base et retourne un ID.
+ * 5. On construit l'URL finale : `/api/images?id=123`.
+ * 6. Cette URL est envoyée au formulaire principal.
+ * 
+ * STRUCTURE DU FORMULAIRE :
+ * - Titre (text input).
+ * - Description (textarea).
+ * - Police (select : Playfair Display, Lato, etc).
+ * - Couleur du texte (color picker).
+ * - Image (file input + preview).
+ * - Son (file input + duration indicator).
+ * 
+ * CHAMPS STYLE_CONFIG :
+ * - Font : Police d'écriture (personnalise l'affichage dans la tuile).
+ * - Color : Couleur du texte (blanc par défaut, customisable).
+ * - Sauvegardés comme JSON dans la base de données.
+ * 
+ * VALIDATION :
+ * - Image : png, jpg, webp (max 5 MB).
+ * - Son : mp3, wav, ogg (max 10 MB).
+ * - Titre : requis (au moins 1 caractère).
+ * 
+ * GESTION DES ERREURS :
+ * - Fichier trop lourd : alert("Le fichier est trop volumineux").
+ * - Mauvais type : alert("Le type de fichier n'est pas supporté").
+ * - Erreur d'upload : console.error + feedback utilisateur.
+ * 
+ * MODES DE FONCTIONNEMENT :
+ * - Création (initialData = undefined) : Champs vides, titre "Ajouter une tuile".
+ * - Édition (initialData = {...}) : Champs pré-remplis, titre "Éditer la tuile".
+ * 
+ * INTERACTIONS :
+ * - Annuler : Appelle onCancel() sans sauvegarder.
+ * - Soumettre : Valide et appelle onSubmit() avec les données.
+ * - Pendant l'upload : Bouton disabled, spineur visible.
+ * 
+ * NOTES SUR L'UPLOAD :
+ * - Les fichiers ne sont pas inline dans le formulaire principal.
+ * - On les envoie d'abord, récupère l'ID, puis on l'insère dans le payload.
+ * - Cela évite de garder les fichiers en mémoire trop longtemps.
+ * 
+ * LIMITATIONS :
+ * - Un seul fichier à la fois (pas de multi-select).
+ * - Les uploads sont bloquants (pas de parallélisation).
+ * - Pas de preview audio (juste le nom du fichier).
+ * 
+ * AMÉLIORATIONS FUTURES :
+ * - Drag & drop pour les fichiers.
+ * - Preview en temps réel de l'image.
+ * - Progress bar pour les gros uploads.
+ * - Compression d'images avant upload.
+ * 
+ * DONNÉES SAUVEGARDÉES EN BASE :
+ * - Champ "style_config" (JSONB) : { font, color }.
+ * - Permet de personnaliser chaque tuile indépendamment.
+ * - Overridable via l'admin ou en code.
+ * 
+ * INTÉGRATION AVEC TILEGRID :
+ * - TileGrid récupère les styles depuis la base.
+ * - Applique les polices et couleurs au rendu.
+ * - Chaque tuile peut avoir un style différent.
+ * 
+ * SÉCURITÉ :
+ * - Les fichiers sont validés côté client (type, taille).
+ * - Le serveur les valide à nouveau (ne pas faire confiance au client).
+ * - Les URLs sont construites dynamiquement (pas d'accès direct au disque).
+ * 
+ * PERFORMANCE :
+ * - Upload non-bloquant : les fichiers sont envoyés en arrière-plan.
+ * - Le formulaire ne bloque pas l'interface.
+ * - Timeouts configurables côté serveur.
+ * 
+ * LIEN AVEC D'AUTRES FICHIERS :
+ * - /api/images : Sauvegarde les images.
+ * - /api/sounds : Sauvegarde les sons.
+ * - /api/tiles : Sauvegarde la tuile complète.
+ * - TileGrid.tsx : Utilise les styles_config.
+ * 
+ * EXEMPLE D'UTILISATION :
+ * ```tsx
+ * <TileForm
+ *   initialData={null}  // ou {id: 1, title: "...", ...}
+ *   onSubmit={async (data) => { await fetch('/api/tiles', { body: data }) }}
+ *   onCancel={() => setIsAdding(false)}
+ * />
+ * ```
+ * 
+ * _____________________________________________________________________________
+ * FIN DE LA DOCUMENTATION
+ * _____________________________________________________________________________
+ */
+
 'use client';
 
 import React, { useState } from 'react';
@@ -9,7 +134,12 @@ interface TileFormProps {
 }
 
 export function TileForm({ initialData, onSubmit, onCancel }: TileFormProps) {
+  // ---------------------------------------------------------------------------
+  // ÉTAT
+  // ---------------------------------------------------------------------------
   const [loading, setLoading] = useState(false);
+  
+  // Files en attente d'upload (non envoyées à la base pour l'instant)
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [soundFile, setSoundFile] = useState<File | null>(null);
 
