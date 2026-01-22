@@ -79,7 +79,6 @@
  * 
  * AMÉLIORATIONS FUTURES :
  * - Drag & drop pour les fichiers.
- * - Preview en temps réel de l'image.
  * - Progress bar pour les gros uploads.
  * - Compression d'images avant upload.
  * 
@@ -125,7 +124,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface TileFormProps {
   initialData?: any;
@@ -142,6 +141,17 @@ export function TileForm({ initialData, onSubmit, onCancel }: TileFormProps) {
   // Files en attente d'upload (non envoyées à la base pour l'instant)
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [soundFile, setSoundFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (imageFile) {
+      const url = URL.createObjectURL(imageFile);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setPreviewUrl(null);
+    }
+  }, [imageFile]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -227,7 +237,13 @@ export function TileForm({ initialData, onSubmit, onCancel }: TileFormProps) {
       <div className="grid grid-cols-2 gap-4">
         <div>
             <label className="block text-sm font-medium mb-1">Image</label>
-            {initialData?.image_url && <img src={initialData.image_url} alt="Preview" className="h-20 mb-2 rounded object-cover" />}
+            {(previewUrl || initialData?.image_url) && (
+              <img
+                src={previewUrl || initialData.image_url}
+                alt="Preview"
+                className="h-20 mb-2 rounded object-cover"
+              />
+            )}
             <input type="hidden" name="image_url" defaultValue={initialData?.image_url} />
             <input
               type="file"
