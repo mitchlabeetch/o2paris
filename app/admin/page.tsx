@@ -71,7 +71,13 @@ export default function AdminPage() {
   const loadTiles = () => {
     fetch('/api/tiles')
       .then(res => res.json())
-      .then(setTiles)
+      .then(data => {
+        if (Array.isArray(data)) {
+          setTiles(data);
+        } else {
+          setTiles([]);
+        }
+      })
       .catch(console.error);
   };
 
