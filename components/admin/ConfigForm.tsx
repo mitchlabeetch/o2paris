@@ -123,6 +123,17 @@
 import { useState, useEffect } from 'react';
 import type { MapConfig, CustomBackground } from '@/lib/db';
 import { BACKGROUND_PRESETS, OVERLAY_ICON_PRESETS, FONT_PRESETS } from '@/lib/db';
+import ColorPicker from './ColorPicker';
+
+const COLOR_THEMES = [
+  { name: "Eau de Paris", primary: "#2196f3", secondary: "#1565c0" },
+  { name: "Forêt", primary: "#4caf50", secondary: "#2e7d32" },
+  { name: "Coucher de Soleil", primary: "#ff9800", secondary: "#f57c00" },
+  { name: "Baie Sauvage", primary: "#9c27b0", secondary: "#7b1fa2" },
+  { name: "Ardoise", primary: "#607d8b", secondary: "#455a64" },
+  { name: "Océan Profond", primary: "#006064", secondary: "#00acc1" },
+  { name: "Rose", primary: "#e91e63", secondary: "#c2185b" },
+];
 
 // ---------------------------------------------------------------------------
 // PROPS (PARAMÈTRES)
@@ -295,56 +306,45 @@ export default function ConfigForm({ config: initialConfig, onSave }: ConfigForm
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Couleur principale
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="color"
-                    value={config.primary_color || "#2196f3"}
-                    onChange={(e) =>
-                      setConfig({ ...config, primary_color: e.target.value })
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Thèmes de couleurs rapides
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {COLOR_THEMES.map((theme) => (
+                  <button
+                    key={theme.name}
+                    type="button"
+                    onClick={() =>
+                      setConfig({
+                        ...config,
+                        primary_color: theme.primary,
+                        secondary_color: theme.secondary,
+                      })
                     }
-                    className="h-10 w-16 rounded border border-gray-300 cursor-pointer"
-                  />
-                  <input
-                    type="text"
-                    value={config.primary_color || "#2196f3"}
-                    onChange={(e) =>
-                      setConfig({ ...config, primary_color: e.target.value })
-                    }
-                    className="water-input flex-1"
-                    placeholder="#2196f3"
-                  />
-                </div>
+                    className="px-3 py-1.5 rounded-full border border-gray-200 text-sm hover:shadow-md transition-shadow flex items-center gap-2 bg-white"
+                  >
+                    <div className="flex gap-1">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: theme.primary }} />
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: theme.secondary }} />
+                    </div>
+                    {theme.name}
+                  </button>
+                ))}
               </div>
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Couleur secondaire
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="color"
-                    value={config.secondary_color || "#1565c0"}
-                    onChange={(e) =>
-                      setConfig({ ...config, secondary_color: e.target.value })
-                    }
-                    className="h-10 w-16 rounded border border-gray-300 cursor-pointer"
-                  />
-                  <input
-                    type="text"
-                    value={config.secondary_color || "#1565c0"}
-                    onChange={(e) =>
-                      setConfig({ ...config, secondary_color: e.target.value })
-                    }
-                    className="water-input flex-1"
-                    placeholder="#1565c0"
-                  />
-                </div>
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <ColorPicker
+                label="Couleur principale"
+                color={config.primary_color || "#2196f3"}
+                onChange={(val) => setConfig({ ...config, primary_color: val })}
+              />
+              <ColorPicker
+                label="Couleur secondaire"
+                color={config.secondary_color || "#1565c0"}
+                onChange={(val) => setConfig({ ...config, secondary_color: val })}
+              />
             </div>
           </div>
         </div>

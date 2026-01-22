@@ -1,0 +1,22 @@
+
+> o2paris@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+
+ ✓ Starting...
+ ✓ Ready in 1749ms
+ ○ Compiling /admin ...
+ ✓ Compiled /admin in 7.4s (518 modules)
+ GET /admin 200 in 8235ms
+ ✓ Compiled in 848ms (255 modules)
+ ○ Compiling /api/auth/login ...
+ ✓ Compiled /api/auth/login in 3.8s (291 modules)
+ POST /api/auth/login 200 in 3955ms
+ ✓ Compiled /api/config in 448ms (295 modules)
+ ✓ Compiled (297 modules)
+ GET /api/config 200 in 657ms
+ GET /api/tiles 503 in 666ms
+ GET /admin 200 in 165ms
+ POST /api/auth/login 200 in 13ms
