@@ -37,11 +37,9 @@
  * 
  * LIMITES :
  * - Affiche un seul toast à la fois (pas de queue).
- * - Durée fixe à 3 secondes (non configurable).
  * 
  * AMÉLIORATION FUTURE :
  * - Ajouter une queue de toasts.
- * - Permettre une durée personnalisable.
  * - Support des toasts en haut/bas, gauche/droite.
  * 
  * SÉCURITÉ :
@@ -100,17 +98,18 @@ import { useEffect, useState } from 'react';
 interface ToastProps {
   message: string;
   type?: 'success' | 'error' | 'info';
+  duration?: number;
   onClose: () => void;
 }
 
-export default function Toast({ message, type = 'info', onClose }: ToastProps) {
+export default function Toast({ message, type = 'info', duration = 3000, onClose }: ToastProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose();
-    }, 3000);
+    }, duration);
 
     return () => clearTimeout(timer);
-  }, [onClose]);
+  }, [onClose, duration]);
 
   const bgColors = {
     success: 'bg-green-100 border-green-500 text-green-800',
