@@ -27,13 +27,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
     }
 
-    // Process reordering in a transaction-like manner
-    // Since neon serverless http doesn't support complex transactions easily in simple mode,
-    // we'll execute updates sequentially.
-    for (let i = 0; i < orderedIds.length; i++) {
-      const id = orderedIds[i];
-      await sql`UPDATE tiles SET display_order = ${i + 1} WHERE id = ${id}`;
-    }
+    // Process reordering efficiently using a batch update
+    // We construct a JSON array of updates and use jsonb_to_recordset to apply them in a single query
+    const updates = orderedIds.map((id: number, index: number) => ({
+      id,
+      display_order: index + 1,
+    }));
+
+    await sql`
+      UPDATE tiles
+      SET display_order = x.display_order
+      FROM jsonb_to_recordset(${JSON.stringify(updates)}::jsonb) AS x(id int, display_order int)
+      WHERE tiles.id = x.id
+    `;
 
     return NextResponse.json({ success: true });
   } catch (error) {
