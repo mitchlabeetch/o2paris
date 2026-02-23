@@ -60,32 +60,44 @@ const escapeHtml = (value: string) =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 
+// Cache for storing created icons to avoid recreation on every render
+const iconCache = new globalThis.Map<string, L.DivIcon>();
+
 // Custom water-themed marker icon
 const createWaterIcon = (icon?: string) => {
+  const key = icon || 'DEFAULT';
+  if (iconCache.has(key)) {
+    return iconCache.get(key)!;
+  }
+
   const raw = (icon || '💧').trim();
+  let newIcon: L.DivIcon;
   
   // Check if it's a custom icon reference
   if (raw.startsWith('custom-icon-')) {
     const iconId = raw.replace('custom-icon-', '');
-    return L.divIcon({
+    newIcon = L.divIcon({
       className: 'custom-marker custom-icon-marker',
       html: `<div class="marker-content"><img src="/api/icons?id=${iconId}" alt="icon" style="width: 32px; height: 32px; object-fit: contain;" /></div>`,
       iconSize: [40, 40],
       iconAnchor: [20, 20],
       popupAnchor: [0, -20],
     });
+  } else {
+    const emojiSafePattern = /^(?:[A-Za-z0-9]|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDE4F]|\uD83E[\uDD00-\uDDFF]){1,4}$/;
+    const safe = emojiSafePattern.test(raw) ? raw : '💧';
+    const symbol = escapeHtml(safe);
+    newIcon = L.divIcon({
+      className: 'custom-marker',
+      html: `<div class="marker-content">${symbol}</div>`,
+      iconSize: [40, 40],
+      iconAnchor: [20, 20],
+      popupAnchor: [0, -20],
+    });
   }
-  
-  const emojiSafePattern = /^(?:[A-Za-z0-9]|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDE4F]|\uD83E[\uDD00-\uDDFF]){1,4}$/;
-  const safe = emojiSafePattern.test(raw) ? raw : '💧';
-  const symbol = escapeHtml(safe);
-  return L.divIcon({
-    className: 'custom-marker',
-    html: `<div class="marker-content">${symbol}</div>`,
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
-    popupAnchor: [0, -20],
-  });
+
+  iconCache.set(key, newIcon);
+  return newIcon;
 };
 
 function LocateControl() {
