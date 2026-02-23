@@ -78,15 +78,13 @@
  * - Boutons avec texte explicite.
  * - Contraste suffisant (noir sur blanc, blanc sur bleu/rouge).
  * - Focus visible au clavier.
- * - Fermeture facile (×, Échap possible).
+ * - Fermeture facile (×, Support de la touche Échap).
  * 
  * LIMITES :
  * - Pas d'animation d'entrée/sortie (juste fade).
- * - Pas de gestion du clavier (Échap ne ferme pas).
  * - Pas de contenu scrollable très long.
  * 
  * AMÉLIORATION FUTURE :
- * - Ajouter le support de la touche Échap.
  * - Animation de scale (grow/shrink).
  * - Contenu scrollable si trop long.
  * - Gestion du focus (trap focus à l'intérieur).
@@ -117,6 +115,8 @@
 
 'use client';
 
+import { useEffect } from 'react';
+
 interface ModalProps {
   isOpen: boolean;
   title: string;
@@ -138,6 +138,19 @@ export default function Modal({
   cancelText = 'Annuler',
   isDestructive = false,
 }: ModalProps) {
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
